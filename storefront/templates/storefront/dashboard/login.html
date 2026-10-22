@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | AZI HOME CONTROL CENTER</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #0B0E14;
+      --bg-card: #151D2C;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --gold-primary: #C9A982;
+      --gold-light: #E0C7A8;
+      --gold-dark: #9E7D56;
+      --gold-glow: rgba(201, 169, 130, 0.2);
+      --text-main: #F0F2F5;
+      --text-muted: #8E9BAE;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #172133 0%, var(--bg-dark) 80%);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold-light), var(--gold-dark));
+      border-radius: 16px 16px 0 0;
+    }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .brand-mark {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+      color: #0B0E14;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: 1px;
+      box-shadow: 0 6px 20px var(--gold-glow);
+      margin-bottom: 16px;
+    }
+
+    .brand-header h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: #FFF;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .brand-header p {
+      font-size: 11.5px;
+      letter-spacing: 1.5px;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .form-control {
+      width: 100%;
+      background: #0E131E;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #FFF;
+      font-family: inherit;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--gold-primary);
+      box-shadow: 0 0 0 3px rgba(201, 169, 130, 0.15);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+      color: #0B0E14;
+      box-shadow: 0 4px 16px var(--gold-glow);
+      margin-top: 8px;
+    }
+
+    .btn-gold:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 24px 0;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .divider span {
+      padding: 0 12px;
+    }
+
+    .btn-quick {
+      background: rgba(201, 169, 130, 0.12);
+      color: var(--gold-light);
+      border: 1px solid rgba(201, 169, 130, 0.3);
+    }
+
+    .btn-quick:hover {
+      background: rgba(201, 169, 130, 0.22);
+      border-color: var(--gold-primary);
+    }
+
+    .messages {
+      margin-bottom: 20px;
+    }
+
+    .alert {
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 10px;
+      background: rgba(239, 68, 68, 0.15);
+      color: #FCA5A5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .back-home {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .back-home a {
+      color: var(--text-muted);
+      font-size: 12.5px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .back-home a:hover {
+      color: var(--gold-light);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="brand-header">
+      <div class="brand-mark">AZ</div>
+      <h1>AZI HOME</h1>
+      <p>Power Administration</p>
+    </div>
+
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="alert">
+            <i class="ri-error-warning-line"></i> {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'storefront:dashboard_login' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" placeholder="admin" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-gold">
+        <i class="ri-lock-unlock-line"></i>
+        <span>Sign In to Dashboard</span>
+      </button>
+    </form>
+
+    <div class="divider">
+      <span>Or Instant Admin Access</span>
+    </div>
+
+    <a href="{% url 'storefront:dashboard_quick_login' %}" class="btn btn-quick">
+      <i class="ri-flashlight-line"></i>
+      <span>One-Click Superuser Access</span>
+    </a>
+
+    <div class="back-home">
+      <a href="{% url 'storefront:index' %}">
+        <i class="ri-arrow-left-line"></i> Return to storefront
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>

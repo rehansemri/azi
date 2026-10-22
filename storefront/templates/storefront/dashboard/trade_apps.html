@@ -1,0 +1,89 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Trade & Designer Partner Applications{% endblock %}
+{% block page_subtitle %}Review credentials, trade licenses, and grant verified designer status{% endblock %}
+
+{% block content %}
+
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="ri-vip-crown-line" style="color: var(--gold-primary);"></i>
+      <span>Applications Received ({{ applications|length }})</span>
+    </div>
+  </div>
+
+  <div class="data-table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Applicant</th>
+          <th>Company / Business</th>
+          <th>Tax ID / Resale #</th>
+          <th>Project Scope / Volume</th>
+          <th>Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in applications %}
+          <tr>
+            <td style="font-size: 11.5px; color: var(--text-dim); white-space: nowrap;">
+              {{ app.created_at|date:"M d, Y" }}
+            </td>
+            <td>
+              <div style="font-weight: 600; color: #FFF;">{{ app.first_name }} {{ app.last_name }}</div>
+              <div style="font-size: 11.5px; color: var(--text-muted);"><i class="ri-mail-line"></i> {{ app.email }}</div>
+              {% if app.phone %}
+                <div style="font-size: 11px; color: var(--text-dim);"><i class="ri-phone-line"></i> {{ app.phone }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <div style="font-weight: 500; color: #FFF;">{{ app.company }}</div>
+              <div style="font-size: 11px; color: var(--gold-light);">{{ app.business_type|default:"Design Studio" }}</div>
+              {% if app.website %}
+                <a href="{{ app.website }}" target="_blank" style="font-size: 11px; color: var(--text-dim); text-decoration: underline;">
+                  {{ app.website|truncatechars:25 }}
+                </a>
+              {% endif %}
+            </td>
+            <td>
+              <code style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-size: 11.5px;">{{ app.tax_id|default:"Pending" }}</code>
+            </td>
+            <td style="color: var(--text-muted); font-size: 12px;">
+              {{ app.annual_volume|default:"Standard Tier" }}
+            </td>
+            <td>
+              {% if app.approved %}
+                <span class="badge badge-success"><i class="ri-check-line"></i> Approved</span>
+              {% else %}
+                <span class="badge badge-warning"><i class="ri-time-line"></i> Pending Review</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right;">
+              <form method="POST" action="{% url 'storefront:dashboard_trade_toggle_approve' app.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn {% if app.approved %}btn-secondary{% else %}btn-gold{% endif %} btn-sm">
+                  {% if app.approved %}
+                    <i class="ri-close-line"></i> Revoke
+                  {% else %}
+                    <i class="ri-check-line"></i> Approve Partner
+                  {% endif %}
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 40px;">
+              No trade partner applications in the database yet. Test the application form at <a href="{% url 'storefront:trade' %}" target="_blank" style="color: var(--gold-light);">/become-a-partner/</a>.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

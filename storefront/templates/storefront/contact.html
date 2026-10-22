@@ -1,0 +1,251 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_content.meta_title|default:"Contact Us & Global Showrooms | AZI HOME" }}{% endblock %}
+
+{% block content %}
+<!-- HERO FULLBLEED BANNER -->
+<section class="heritage-fullbleed-section" style="min-height: 420px;">
+  <img src="{{ page_content.hero_image|default:'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=85' }}" 
+       alt="{{ page_content.title|default:'Contact AZI HOME' }}" 
+       class="heritage-fullbleed-bg">
+  <div class="heritage-fullbleed-content">
+    <div class="heritage-fullbleed-eyebrow">{{ page_content.eyebrow|default:"GLOBAL CONCIERGE & SHOWROOMS" }}</div>
+    <h1 class="heritage-fullbleed-title">{{ page_content.title|default:"Connect With AZI HOME" }}</h1>
+    <p class="heritage-fullbleed-desc">
+      {{ page_content.subtitle|default:"Our luxury rug advisors, trade specialists, and artisan liaisons are ready to assist with your residential and commercial projects." }}
+    </p>
+  </div>
+</section>
+
+<!-- MAIN WRAPPER -->
+<div class="section-wrapper" style="max-width: 1200px; padding-top: 60px; padding-bottom: 80px;">
+
+  <!-- SUCCESS BANNER IF FORM WAS SUBMITTED -->
+  {% if submitted %}
+    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid #10B981; border-radius: 8px; padding: 24px; margin-bottom: 40px; text-align: center;">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #10B981; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 10px;">
+        ✓
+      </div>
+      <h3 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--color-ink); margin-bottom: 6px;">Thank You, {{ submitted_name }}!</h3>
+      <p style="font-size: 0.95rem; color: var(--color-text-main); max-width: 600px; margin: 0 auto;">
+        Your inquiry has been successfully delivered directly to our senior trade concierge. A dedicated design specialist will review your project details and contact you within 24 business hours.
+      </p>
+    </div>
+  {% endif %}
+
+  <!-- HIGHLIGHT STATEMENT -->
+  {% if page_content.highlight_text %}
+    <div style="font-family: var(--font-editorial); font-size: 1.5rem; line-height: 1.6; color: var(--color-ink); font-style: italic; margin-bottom: 50px; text-align: center; max-width: 860px; margin-left: auto; margin-right: auto;">
+      {{ page_content.highlight_text }}
+    </div>
+  {% endif %}
+
+  <!-- CONTACT GRID: DETAILS & INTERACTIVE FORM -->
+  <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 50px; align-items: start; margin-bottom: 70px;">
+    
+    <!-- LEFT: DIRECT CONCIERGE & SHOWROOM HUBS -->
+    <div>
+      <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-accent-clay); font-weight: 700; margin-bottom: 8px;">
+        {{ page_content.section_subheading|default:"DIRECT ASSISTANCE" }}
+      </div>
+      <h2 style="font-family: var(--font-serif); font-size: 2rem; color: var(--color-ink); margin-bottom: 16px;">
+        {{ page_content.section_heading|default:"Client Care & Project Support" }}
+      </h2>
+      <p style="font-size: 0.95rem; line-height: 1.7; color: var(--color-text-main); margin-bottom: 30px;">
+        {{ page_content.body|default:"Whether you are seeking custom sizing for an architectural residence, requesting 18\" loan swatches, or verifying trade tier discounts, our team provides personalized guidance." }}
+      </p>
+
+      <!-- Concierge Contact Cards -->
+      <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 36px;">
+        <div style="background: var(--color-bg-warm); padding: 20px; border-radius: 6px; border-left: 3px solid var(--color-accent-clay);">
+          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); font-weight: 600;">Trade Specialist Hotline</div>
+          <div style="font-family: var(--font-serif); font-size: 1.3rem; color: var(--color-ink); margin-top: 4px;">
+            <a href="tel:{{ settings.contact_phone|default:'+18006782478' }}" style="color: inherit; text-decoration: none;">
+              {{ settings.contact_phone|default:"+1 (800) 678-2478" }}
+            </a>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 2px;">Monday – Friday: 8:00 AM – 6:00 PM EST</div>
+        </div>
+
+        <div style="background: var(--color-bg-warm); padding: 20px; border-radius: 6px; border-left: 3px solid #1F2735;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); font-weight: 600;">Trade & Designer Support</div>
+          <div style="font-size: 1.05rem; font-weight: 600; color: var(--color-ink); margin-top: 4px;">
+            <a href="mailto:{{ settings.trade_email|default:'trade@azi-home.com' }}" style="color: inherit; text-decoration: underline;">
+              {{ settings.trade_email|default:"trade@azi-home.com" }}
+            </a>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 2px;">For tax exemption, quotes & bespoke projects</div>
+        </div>
+
+        <div style="background: var(--color-bg-warm); padding: 20px; border-radius: 6px; border-left: 3px solid #10B981;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); font-weight: 600;">General Inquiries & Orders</div>
+          <div style="font-size: 1.05rem; font-weight: 600; color: var(--color-ink); margin-top: 4px;">
+            <a href="mailto:{{ settings.contact_email|default:'info@azi-home.com' }}" style="color: inherit; text-decoration: underline;">
+              {{ settings.contact_email|default:"info@azi-home.com" }}
+            </a>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 2px;">Order tracking, swatch exchange & returns</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: INTERACTIVE CONTACT FORM -->
+    <div style="background: #FFF; padding: 36px 32px; border-radius: 8px; border: 1px solid var(--color-border); box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+      <h3 style="font-family: var(--font-serif); font-size: 1.4rem; color: var(--color-ink); margin-bottom: 6px;">
+        Send a Message to the Concierge
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 24px;">
+        Please complete the fields below. A concierge specialist will respond with product availability, high-res tear sheets, or sample kits.
+      </p>
+
+      <form method="POST" action="{% url 'storefront:contact' %}">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label style="display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--color-ink); margin-bottom: 6px;">
+              Your Full Name *
+            </label>
+            <input type="text" name="full_name" required placeholder="e.g. Eleanor Vance" class="form-input-luxury" style="width: 100%; padding: 11px 14px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.95rem;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--color-ink); margin-bottom: 6px;">
+              Email Address *
+            </label>
+            <input type="email" name="email" required placeholder="name@designstudio.com" class="form-input-luxury" style="width: 100%; padding: 11px 14px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.95rem;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label style="display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--color-ink); margin-bottom: 6px;">
+              Phone Number
+            </label>
+            <input type="tel" name="phone" placeholder="+1 (555) 000-0000" class="form-input-luxury" style="width: 100%; padding: 11px 14px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.95rem;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--color-ink); margin-bottom: 6px;">
+              Inquiry Type *
+            </label>
+            <select name="inquiry_type" class="form-input-luxury" style="width: 100%; padding: 11px 14px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.95rem; background: #FFF;">
+              <option value="general">General Inquiries</option>
+              <option value="trade">Trade Program & Discount Tiers</option>
+              <option value="order">Order Status & White Glove Freight</option>
+              <option value="return">Returns, Swatch Exchange & RMA</option>
+              <option value="custom">Custom Bespoke Loom Sizing</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--color-ink); margin-bottom: 6px;">
+            Subject / Project Reference
+          </label>
+          <input type="text" name="subject" placeholder="e.g. Malibu Living Room — 10'X14' Rug Lead Time" class="form-input-luxury" style="width: 100%; padding: 11px 14px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.95rem;">
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <label style="display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--color-ink); margin-bottom: 6px;">
+            Your Message / Project Details *
+          </label>
+          <textarea name="message" rows="5" required placeholder="Provide collection name, dimensions, or specific questions..." class="form-input-luxury" style="width: 100%; padding: 11px 14px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.95rem; line-height: 1.5;"></textarea>
+        </div>
+
+        <button type="submit" class="btn-luxury-dark" style="width: 100%; justify-content: center; padding: 14px;">
+          Submit Inquiry to Concierge
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- SHOWROOM LOCATIONS GRID -->
+  <div style="border-top: 1px solid var(--color-border); padding-top: 50px;">
+    <div style="text-align: center; margin-bottom: 40px;">
+      <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-accent-clay); font-weight: 700;">
+        EXPERIENCE OUR DESIGNS
+      </div>
+      <h2 style="font-family: var(--font-serif); font-size: 2rem; color: var(--color-ink); margin-top: 4px;">
+        Flagship Showrooms & Market Suites
+      </h2>
+      <p style="font-size: 0.95rem; color: var(--color-text-muted); max-width: 600px; margin: 8px auto 0 auto;">
+        Visit our premier showroom spaces to touch heirloom textures, review color poms, and meet your regional account executive.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px;">
+      
+      <!-- Atlanta -->
+      <div style="background: var(--color-bg-warm); padding: 24px; border-radius: 6px;">
+        <h4 style="font-family: var(--font-serif); font-size: 1.25rem; color: var(--color-ink); margin-bottom: 8px;">Atlanta Headquarters</h4>
+        <p style="font-size: 0.88rem; color: var(--color-text-main); line-height: 1.6; margin-bottom: 12px;">
+          6180 Atlantic Blvd, Suite L<br>
+          Norcross, GA 30071<br>
+          United States
+        </p>
+        <div style="font-size: 0.82rem; color: var(--color-text-muted);">
+          Open Mon–Fri, 9:00 AM – 5:00 PM EST<br>
+          Private trade appointments welcomed
+        </div>
+      </div>
+
+      <!-- High Point -->
+      <div style="background: var(--color-bg-warm); padding: 24px; border-radius: 6px;">
+        <h4 style="font-family: var(--font-serif); font-size: 1.25rem; color: var(--color-ink); margin-bottom: 8px;">High Point Market</h4>
+        <p style="font-size: 0.88rem; color: var(--color-text-main); line-height: 1.6; margin-bottom: 12px;">
+          IHFC Building, Suite W-130<br>
+          210 E Commerce Ave<br>
+          High Point, NC 27260
+        </p>
+        <div style="font-size: 0.82rem; color: var(--color-text-muted);">
+          Open during Spring & Fall Markets<br>
+          And year-round by appointment
+        </div>
+      </div>
+
+      <!-- Dallas -->
+      <div style="background: var(--color-bg-warm); padding: 24px; border-radius: 6px;">
+        <h4 style="font-family: var(--font-serif); font-size: 1.25rem; color: var(--color-ink); margin-bottom: 8px;">Dallas Design District</h4>
+        <p style="font-size: 0.88rem; color: var(--color-text-main); line-height: 1.6; margin-bottom: 12px;">
+          World Trade Center, Suite 10014<br>
+          2050 N Stemmons Fwy<br>
+          Dallas, TX 75207
+        </p>
+        <div style="font-size: 0.82rem; color: var(--color-text-muted);">
+          Total Home & Gift Markets<br>
+          Designer sample loan library on-site
+        </div>
+      </div>
+
+      <!-- Bhadohi Campus -->
+      <div style="background: var(--color-bg-warm); padding: 24px; border-radius: 6px;">
+        <h4 style="font-family: var(--font-serif); font-size: 1.25rem; color: var(--color-ink); margin-bottom: 8px;">Bhadohi Artisan Campus & Weaving Center</h4>
+        <p style="font-size: 0.88rem; color: var(--color-text-main); line-height: 1.6; margin-bottom: 12px;">
+          Carpet City, Maryadpatti<br>
+          Bhadohi, Uttar Pradesh 221401<br>
+          India
+        </p>
+        <div style="font-size: 0.82rem; color: var(--color-text-muted);">
+          Loom tours & dye house visits<br>
+          Home to 40,000 artisan families
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CTA FOOTER -->
+    <div style="text-align: center; margin-top: 50px;">
+      <a href="{{ page_content.cta_primary_url|default:'/rugs/' }}" class="btn-luxury-dark">
+        {{ page_content.cta_primary_text|default:"Explore The Rugs Catalog" }}
+      </a>
+      <a href="{{ page_content.cta_secondary_url|default:'/become-a-partner/' }}" class="btn-luxury-outline" style="margin-left: 14px;">
+        {{ page_content.cta_secondary_text|default:"Apply for Trade Program" }}
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

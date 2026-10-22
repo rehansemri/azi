@@ -1,0 +1,309 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block title %}Universal Media Library — AZI HOME Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <div>
+    <div class="breadcrumbs">
+      <a href="{% url 'storefront:dashboard_home' %}">Admin Dashboard</a>
+      <span>/</span>
+      <span style="color: var(--gold-light);">Media Library & Universal Uploads</span>
+    </div>
+    <h1 style="font-family: var(--font-heading); font-size: 28px; margin: 4px 0 0 0; color: #FFF; font-weight: 600;">
+      Media & Digital Asset Library
+    </h1>
+    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+      Upload, manage, and distribute high-res photography, ambient videos, 3D AR models, and catalog PDFs.
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; text-align: right;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Storage Used</div>
+      <div style="font-size: 15px; font-weight: 700; color: var(--gold-light);">{{ total_storage_formatted }} ({{ total_count }} Files)</div>
+    </div>
+    <button type="button" class="btn btn-gold" onclick="document.getElementById('fileUploadInput').click()">
+      <i class="ri-upload-cloud-2-line"></i>
+      <span>Upload Media Files</span>
+    </button>
+  </div>
+</div>
+
+<!-- DRAG & DROP UPLOAD DROPZONE -->
+<div class="panel" style="margin-bottom: 24px; border: 2px dashed rgba(201, 169, 130, 0.4); background: rgba(201, 169, 130, 0.02); transition: all 0.3s ease;" id="dropzonePanel">
+  <div class="panel-body" style="padding: 32px 24px; text-align: center;">
+    <form method="POST" action="{% url 'storefront:dashboard_media_upload' %}" enctype="multipart/form-data" id="universalUploadForm">
+      {% csrf_token %}
+      <input type="file" name="files" id="fileUploadInput" multiple style="display: none;" onchange="handleFileSelection(this)">
+
+      <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(201, 169, 130, 0.12); color: var(--gold-primary); display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 12px;">
+        <i class="ri-upload-2-line"></i>
+      </div>
+
+      <h3 style="font-size: 17px; font-weight: 600; color: #FFF; margin: 0 0 6px 0;">
+        Drag & Drop Any Media File Here, or <label for="fileUploadInput" style="color: var(--gold-light); cursor: pointer; text-decoration: underline;">Browse Computer</label>
+      </h3>
+      <p style="font-size: 13px; color: var(--text-muted); max-width: 620px; margin: 0 auto 16px auto; line-height: 1.5;">
+        Supports all media formats: High-res images (<code style="color:var(--gold-light);">JPG, PNG, WEBP, GIF, SVG</code>), ambient videos (<code style="color:var(--gold-light);">MP4, WEBM, MOV</code>), 3D AR models (<code style="color:var(--gold-light);">USDZ, GLB, GLTF</code>), and trade spec sheets (<code style="color:var(--gold-light);">PDF, DOCX</code>).
+      </p>
+
+      <div id="selectedFilesSummary" style="display: none; margin-bottom: 16px; background: rgba(255,255,255,0.04); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--border-color); max-width: 500px; margin-left: auto; margin-right: auto;">
+        <div style="font-size: 13px; color: #FFF; font-weight: 600;" id="fileCountNotice">0 files selected</div>
+        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;" id="fileNamesList"></div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button type="submit" class="btn btn-gold btn-sm" id="startUploadBtn" style="display: none;">
+          <i class="ri-check-line"></i> Start Uploading
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="clearSelectedFiles()" id="cancelSelectionBtn" style="display: none;">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CATEGORY TABS & SEARCH BAR -->
+<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 22px;">
+  <!-- Media Type Filter Pills -->
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="{% url 'storefront:dashboard_media_library' %}{% if search_q %}?q={{ search_q }}{% endif %}" 
+       class="btn btn-sm {% if current_type == 'all' or not current_type %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+      <i class="ri-apps-2-line"></i>
+      <span>All Assets ({{ total_count }})</span>
+    </a>
+    <a href="{% url 'storefront:dashboard_media_library' %}?type=image{% if search_q %}&q={{ search_q }}{% endif %}" 
+       class="btn btn-sm {% if current_type == 'image' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+      <i class="ri-image-line"></i>
+      <span>Images ({{ images_count }})</span>
+    </a>
+    <a href="{% url 'storefront:dashboard_media_library' %}?type=video{% if search_q %}&q={{ search_q }}{% endif %}" 
+       class="btn btn-sm {% if current_type == 'video' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+      <i class="ri-video-line"></i>
+      <span>Videos ({{ videos_count }})</span>
+    </a>
+    <a href="{% url 'storefront:dashboard_media_library' %}?type=model3d{% if search_q %}&q={{ search_q }}{% endif %}" 
+       class="btn btn-sm {% if current_type == 'model3d' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+      <i class="ri-box-3-line"></i>
+      <span>3D / AR Models ({{ models3d_count }})</span>
+    </a>
+    <a href="{% url 'storefront:dashboard_media_library' %}?type=document{% if search_q %}&q={{ search_q }}{% endif %}" 
+       class="btn btn-sm {% if current_type == 'document' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+      <i class="ri-file-text-line"></i>
+      <span>Documents / PDFs ({{ documents_count }})</span>
+    </a>
+  </div>
+
+  <!-- Search form -->
+  <form method="GET" action="{% url 'storefront:dashboard_media_library' %}" style="display: flex; gap: 8px;">
+    {% if current_type and current_type != 'all' %}
+      <input type="hidden" name="type" value="{{ current_type }}">
+    {% endif %}
+    <input type="text" name="q" value="{{ search_q }}" placeholder="Search file name or title..." class="form-control" style="width: 240px; font-size: 12.5px; padding: 7px 12px;">
+    <button type="submit" class="btn btn-secondary btn-sm">
+      <i class="ri-search-line"></i>
+    </button>
+    {% if search_q %}
+      <a href="{% url 'storefront:dashboard_media_library' %}{% if current_type %}?type={{ current_type }}{% endif %}" class="btn btn-secondary btn-sm" title="Clear search">
+        <i class="ri-close-line"></i>
+      </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- MEDIA ASSETS GRID -->
+{% if assets %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px;">
+  {% for asset in assets %}
+    <div class="panel" style="overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s ease, border-color 0.2s ease; border-radius: 10px;" onmouseenter="this.style.borderColor='var(--gold-primary)'" onmouseleave="this.style.borderColor='var(--border-color)'">
+      
+      <!-- Preview / Thumbnail Area -->
+      <div style="position: relative; height: 160px; background: #0c0b0a; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+        {% if asset.file_type == 'image' %}
+          <img src="{{ asset.file_url }}" alt="{{ asset.title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
+        {% elif asset.file_type == 'video' %}
+          <div style="text-align: center; color: var(--gold-light);">
+            <div style="font-size: 42px; line-height: 1;"><i class="ri-video-fill"></i></div>
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 600;">Ambient Video</div>
+          </div>
+        {% elif asset.file_type == 'model3d' %}
+          <div style="text-align: center; color: #60A5FA;">
+            <div style="font-size: 44px; line-height: 1;"><i class="ri-box-3-fill"></i></div>
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 600;">3D / AR Asset</div>
+          </div>
+        {% elif asset.file_type == 'document' %}
+          <div style="text-align: center; color: #F87171;">
+            <div style="font-size: 42px; line-height: 1;"><i class="ri-file-pdf-fill"></i></div>
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 600;">Document Spec</div>
+          </div>
+        {% else %}
+          <div style="text-align: center; color: var(--text-dim);">
+            <div style="font-size: 42px; line-height: 1;"><i class="ri-attachment-2"></i></div>
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Media File</div>
+          </div>
+        {% endif %}
+
+        <!-- Top Right Badge -->
+        <span class="badge" style="position: absolute; top: 10px; right: 10px; font-size: 10px; text-transform: uppercase; 
+          {% if asset.file_type == 'image' %}background: rgba(16, 185, 129, 0.85); color: #FFF;
+          {% elif asset.file_type == 'video' %}background: rgba(201, 169, 130, 0.9); color: #000; font-weight:700;
+          {% elif asset.file_type == 'model3d' %}background: rgba(59, 130, 246, 0.85); color: #FFF;
+          {% else %}background: rgba(239, 68, 68, 0.85); color: #FFF;{% endif %}">
+          {{ asset.get_file_type_display|truncatechars:12 }}
+        </span>
+
+        <!-- Bottom Size Pill -->
+        <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); color: #FFF; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+          {{ asset.formatted_size }}
+        </span>
+      </div>
+
+      <!-- File Details -->
+      <div style="padding: 12px 14px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: #FFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ asset.title }}">
+            {{ asset.title|default:asset.file_name }}
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;" title="{{ asset.file_name }}">
+            {{ asset.file_name }}
+          </div>
+          <div style="font-size: 10.5px; color: var(--text-dim); margin-top: 6px;">
+            Uploaded {{ asset.uploaded_at|date:"M d, Y" }}
+          </div>
+        </div>
+
+        <!-- Action Row -->
+        <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+          <button type="button" class="btn btn-secondary btn-sm" style="padding: 5px 9px; font-size: 11.5px;" onclick="copyMediaUrl('{{ asset.file_url }}', this)" title="Copy Direct File URL">
+            <i class="ri-file-copy-line"></i>
+            <span>Copy URL</span>
+          </button>
+
+          <div style="display: flex; gap: 4px;">
+            <a href="{{ asset.file_url }}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 5px 8px; font-size: 11.5px;" title="Preview / Open in new tab">
+              <i class="ri-external-link-line"></i>
+            </a>
+
+            <form method="POST" action="{% url 'storefront:dashboard_media_delete' asset.id %}" onsubmit="return confirm('Permanently delete {{ asset.file_name }}?');" style="display: inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm" style="padding: 5px 8px; font-size: 11.5px;" title="Delete media asset">
+                <i class="ri-delete-bin-line"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="panel">
+  <div class="panel-body" style="text-align: center; padding: 60px 20px;">
+    <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255, 255, 255, 0.04); color: var(--text-dim); display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 14px;">
+      <i class="ri-inbox-line"></i>
+    </div>
+    <h3 style="font-size: 18px; font-weight: 600; color: #FFF; margin: 0 0 6px 0;">No Media Files Found</h3>
+    <p style="font-size: 13.5px; color: var(--text-muted); max-width: 480px; margin: 0 auto 20px auto;">
+      {% if search_q or current_type != 'all' %}
+        No assets match your current filter or search criteria. Try clearing the filter.
+      {% else %}
+        Drag and drop any files into the upload dropzone above to begin building your luxury media library.
+      {% endif %}
+    </p>
+    {% if search_q or current_type != 'all' %}
+      <a href="{% url 'storefront:dashboard_media_library' %}" class="btn btn-secondary">
+        <i class="ri-refresh-line"></i> Reset Filters
+      </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="copyToast" style="display: none; position: fixed; bottom: 30px; right: 30px; background: #181613; border: 1px solid var(--gold-primary); color: #FFF; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; gap: 10px;">
+  <i class="ri-checkbox-circle-fill" style="color: var(--gold-light); font-size: 18px;"></i>
+  <span id="copyToastText">File URL copied to clipboard!</span>
+</div>
+
+<script>
+function handleFileSelection(input) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+
+  const notice = document.getElementById('selectedFilesSummary');
+  const countNotice = document.getElementById('fileCountNotice');
+  const listNotice = document.getElementById('fileNamesList');
+  const uploadBtn = document.getElementById('startUploadBtn');
+  const cancelBtn = document.getElementById('cancelSelectionBtn');
+
+  notice.style.display = 'block';
+  uploadBtn.style.display = 'inline-flex';
+  cancelBtn.style.display = 'inline-flex';
+
+  countNotice.textContent = `${files.length} file(s) selected ready to upload`;
+  const names = Array.from(files).map(f => f.name).slice(0, 4).join(', ');
+  listNotice.textContent = files.length > 4 ? `${names}... and ${files.length - 4} more` : names;
+}
+
+function clearSelectedFiles() {
+  document.getElementById('fileUploadInput').value = '';
+  document.getElementById('selectedFilesSummary').style.display = 'none';
+  document.getElementById('startUploadBtn').style.display = 'none';
+  document.getElementById('cancelSelectionBtn').style.display = 'none';
+}
+
+// Drag & drop highlight
+const dropzone = document.getElementById('dropzonePanel');
+['dragenter', 'dragover'].forEach(eventName => {
+  dropzone.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropzone.style.borderColor = 'var(--gold-light)';
+    dropzone.style.background = 'rgba(201, 169, 130, 0.08)';
+  }, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+  dropzone.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropzone.style.borderColor = 'rgba(201, 169, 130, 0.4)';
+    dropzone.style.background = 'rgba(201, 169, 130, 0.02)';
+  }, false);
+});
+
+dropzone.addEventListener('drop', (e) => {
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  if (files && files.length > 0) {
+    document.getElementById('fileUploadInput').files = files;
+    handleFileSelection(document.getElementById('fileUploadInput'));
+  }
+});
+
+function copyMediaUrl(url, btn) {
+  // Build absolute URL if relative
+  const fullUrl = url.startsWith('http') ? url : window.location.origin + url;
+  navigator.clipboard.writeText(fullUrl).then(() => {
+    const toast = document.getElementById('copyToast');
+    const toastText = document.getElementById('copyToastText');
+    toastText.textContent = `Copied: ${fullUrl.substring(0, 45)}...`;
+    toast.style.display = 'flex';
+    setTimeout(() => {
+      toast.style.display = 'none';
+    }, 3000);
+
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="ri-check-line" style="color:var(--gold-light);"></i> Copied';
+    setTimeout(() => {
+      btn.innerHTML = origHtml;
+    }, 2000);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_content.meta_title|default:"Terms & Conditions of Sale | AZI HOME" }}{% endblock %}
+
+{% block content %}
+<!-- HERO BANNER -->
+<section class="heritage-fullbleed-section" style="min-height: 380px;">
+  <img src="{{ page_content.hero_image|default:'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1920&q=85' }}" 
+       alt="{{ page_content.title|default:'Terms & Conditions' }}" 
+       class="heritage-fullbleed-bg">
+  <div class="heritage-fullbleed-content">
+    <div class="heritage-fullbleed-eyebrow">{{ page_content.eyebrow|default:"LEGAL & COMMERCIAL GUIDELINES" }}</div>
+    <h1 class="heritage-fullbleed-title">{{ page_content.title|default:"Terms & Conditions of Sale" }}</h1>
+    <p class="heritage-fullbleed-desc">
+      {{ page_content.subtitle|default:"Standard commercial conditions governing retail purchases, trade commissions, bespoke loom orders, and website use." }}
+    </p>
+  </div>
+</section>
+
+<!-- POLICY ARTICLE WRAPPER -->
+<div class="section-wrapper" style="max-width: 900px; padding-top: 60px; padding-bottom: 80px;">
+
+  <!-- LAST UPDATED TIMESTAMP -->
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 16px; margin-bottom: 40px;">
+    <span style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-accent-clay); font-weight: 700;">
+      Commercial Terms of Service
+    </span>
+    <span style="font-size: 0.85rem; color: var(--color-text-muted);">
+      Effective Date: {{ page_content.updated_at|date:"F d, Y"|default:"October 2026" }}
+    </span>
+  </div>
+
+  <!-- HIGHLIGHT STATEMENT -->
+  {% if page_content.highlight_text %}
+    <div style="background: var(--color-bg-warm); border-left: 4px solid var(--color-accent-clay); padding: 24px 28px; border-radius: 4px; font-family: var(--font-editorial); font-size: 1.25rem; line-height: 1.6; color: var(--color-ink); font-style: italic; margin-bottom: 44px;">
+      {{ page_content.highlight_text }}
+    </div>
+  {% endif %}
+
+  <!-- EDITORIAL INTRO / BODY FROM CMS -->
+  {% if page_content.body %}
+    <div style="font-size: 1.05rem; line-height: 1.8; color: var(--color-text-main); margin-bottom: 40px; white-space: pre-line;">
+      {{ page_content.body }}
+    </div>
+  {% endif %}
+
+  <!-- STRUCTURED LEGAL SECTIONS -->
+  <div class="legal-policy-body" style="font-size: 0.96rem; line-height: 1.8; color: var(--color-text-main);">
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      1. Acceptance of Agreement & Trade Accounts
+    </h3>
+    <p>
+      By accessing this website, purchasing merchandise, or applying for trade status, you agree to be legally bound by these Terms and Conditions. Trade accounts are reserved exclusively for licensed interior designers, architects, hospitality purchasing agents, and accredited home builders. AZI HOME reserves the right to review resale credentials annually and revoke trade pricing if criteria are not maintained.
+    </p>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      2. Authentic Handcrafted Artistry & Natural Variation Disclosure
+    </h3>
+    <p>
+      <strong>Every AZI HOME rug is an authentic handcrafted work of art.</strong> Unlike mass-produced synthetic machine rugs, our collections are woven on hereditary looms by artisan weavers across Rajasthan, India. By placing an order, you acknowledge and accept that:
+    </p>
+    <ul style="padding-left: 24px; margin-bottom: 20px;">
+      <li><strong>Dimensional Tolerances:</strong> Hand-knotting and hand-tufting naturally result in slight size variances of up to +/- 3% from nominal catalog measurements.</li>
+      <li><strong>Yarn Dye Lots:</strong> Unrefined organic wool, raw silk, and hand-spun jute absorb natural vegetable and chrome dyes uniquely. Subtle color striations (abrash) and dye-lot variations between production runs are celebrated hallmarks of hand-loomed luxury, not defects.</li>
+      <li><strong>Sprouting & Shedding:</strong> High-grade unbleached wool naturally sheds loose surface fibers during initial weeks of use. Loose tufts ("sprouts") should be trimmed flush with sharp scissors, never pulled.</li>
+    </ul>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      3. Pricing, Quotations & Payment Terms
+    </h3>
+    <p>
+      All prices are stated in US Dollars (USD). Published trade discounts are applied automatically upon verified trade login. Formal written trade quotations remain guaranteed for thirty (30) calendar days from issuance. Payment in full is required prior to order dispatch, except where formal net billing credit terms have been pre-approved by our credit committee.
+    </p>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      4. White-Glove Freight & Receiving Inspection
+    </h3>
+    <p>
+      Oversized area rugs (8'X10' and larger) ship via specialized furniture freight carriers. <strong>The consignee or receiving warehouse must thoroughly inspect external packaging upon arrival.</strong> Any visible tears, moisture exposure, or carton puncture marks must be clearly annotated on the delivery receipt (Bill of Lading) before signing. Concealed damage must be formally submitted with high-resolution photography to AZI HOME within forty-eight (48) hours of receipt.
+    </p>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      5. Custom Commissions & Bespoke Sizing
+    </h3>
+    <p>
+      Custom rug commissions require a non-refundable 50% deposit and signed CAD layout approval prior to loom setup in Rajasthan. Once warp threads are strung, custom orders cannot be cancelled, modified, or returned, except in cases of verified manufacturing defect.
+    </p>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      6. Intellectual Property & Photography Rights
+    </h3>
+    <p>
+      All proprietary patterns, collection names (e.g., Tierzah, Canyon, CallaLuxe), product photography, and loom design schematics remain the exclusive intellectual property of AZI HOME Inc. Reproduction or unauthorized commercial exploitation is strictly prohibited under international copyright conventions.
+    </p>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      7. Limited One-Year Manufacturing Warranty
+    </h3>
+    <p>
+      AZI HOME warrants our products against structural manufacturing defects for one (1) year from the date of invoice, provided the rug has been placed over an appropriate commercial-grade rug pad and maintained in accordance with our official care instructions. Normal wear, pile crush, pet stains, improper cleaning chemicals, and weather damage on indoor collections are excluded.
+    </p>
+
+  </div>
+
+  <!-- NAVIGATION FOOTER -->
+  <div style="text-align: center; border-top: 1px solid var(--color-border); padding-top: 40px; margin-top: 50px;">
+    <a href="{% url 'storefront:refund' %}" class="btn-luxury-outline">
+      View Refund & Return Policy
+    </a>
+    <a href="{% url 'storefront:contact' %}" class="btn-luxury-dark" style="margin-left: 12px;">
+      Contact Client Care
+    </a>
+  </div>
+
+</div>
+{% endblock %}

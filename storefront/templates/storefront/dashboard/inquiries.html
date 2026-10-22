@@ -1,0 +1,146 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block title %}Customer & Trade Inquiries — AZI HOME Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <div>
+    <div class="breadcrumbs">
+      <a href="{% url 'storefront:dashboard_home' %}">Admin Dashboard</a>
+      <span>/</span>
+      <span style="color: var(--gold-light);">Customer & Trade Inquiries</span>
+    </div>
+    <h1 style="font-family: var(--font-heading); font-size: 28px; margin: 4px 0 0 0; color: #FFF; font-weight: 600;">
+      Customer Concierge & Trade Inquiries
+    </h1>
+    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+      Direct inquiries submitted via the live Contact Us and Customer Service portals.
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; text-align: right;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Pending Inquiries</div>
+      <div style="font-size: 15px; font-weight: 700; color: #F59E0B;">{{ pending_count }} Action Required</div>
+    </div>
+    <a href="{% url 'storefront:contact' %}" target="_blank" class="btn btn-secondary">
+      <i class="ri-external-link-line"></i> View Live Contact Page
+    </a>
+  </div>
+</div>
+
+<!-- FILTER TABS -->
+<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px;">
+  <a href="{% url 'storefront:dashboard_inquiries' %}" 
+     class="btn btn-sm {% if current_type == 'all' or not current_type %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+    All Inquiries ({{ total_count }})
+  </a>
+  <a href="{% url 'storefront:dashboard_inquiries' %}?type=general" 
+     class="btn btn-sm {% if current_type == 'general' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+    General
+  </a>
+  <a href="{% url 'storefront:dashboard_inquiries' %}?type=trade" 
+     class="btn btn-sm {% if current_type == 'trade' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+    Trade Support
+  </a>
+  <a href="{% url 'storefront:dashboard_inquiries' %}?type=order" 
+     class="btn btn-sm {% if current_type == 'order' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+    Order Status
+  </a>
+  <a href="{% url 'storefront:dashboard_inquiries' %}?type=return" 
+     class="btn btn-sm {% if current_type == 'return' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+    Returns & Swatches
+  </a>
+  <a href="{% url 'storefront:dashboard_inquiries' %}?type=custom" 
+     class="btn btn-sm {% if current_type == 'custom' %}btn-gold{% else %}btn-secondary{% endif %}" style="border-radius: 20px;">
+    Custom Sizing
+  </a>
+</div>
+
+<!-- INQUIRIES DATA TABLE -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="ri-inbox-archive-line" style="color: var(--gold-primary);"></i>
+      <span>Messages List ({{ inquiries.count }})</span>
+    </div>
+  </div>
+  <div class="panel-body" style="padding: 0;">
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Client Name & Contact</th>
+            <th>Type</th>
+            <th>Subject & Message Body</th>
+            <th>Date Received</th>
+            <th>Status</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inq in inquiries %}
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: #FFF; font-size: 13.5px;">{{ inq.full_name }}</div>
+                <div style="font-size: 12px; color: var(--gold-light); margin-top: 2px;">
+                  <a href="mailto:{{ inq.email }}" style="color: inherit; text-decoration: underline;">{{ inq.email }}</a>
+                </div>
+                {% if inq.phone %}
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 1px;">
+                    <i class="ri-phone-line"></i> {{ inq.phone }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge" style="font-size: 11px; text-transform: uppercase;
+                  {% if inq.inquiry_type == 'trade' %}background: rgba(201, 169, 130, 0.2); color: var(--gold-light);
+                  {% elif inq.inquiry_type == 'order' %}background: rgba(59, 130, 246, 0.2); color: #93C5FD;
+                  {% elif inq.inquiry_type == 'return' %}background: rgba(239, 68, 68, 0.2); color: #FCA5A5;
+                  {% elif inq.inquiry_type == 'custom' %}background: rgba(168, 85, 247, 0.2); color: #D8B4FE;
+                  {% else %}background: rgba(255, 255, 255, 0.1); color: #FFF;{% endif %}">
+                  {{ inq.get_inquiry_type_display }}
+                </span>
+              </td>
+              <td style="max-width: 380px;">
+                <div style="font-weight: 600; color: #FFF; font-size: 13px; margin-bottom: 4px;">{{ inq.subject }}</div>
+                <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5; white-space: pre-line;">{{ inq.message }}</div>
+              </td>
+              <td style="font-size: 12px; color: var(--text-dim); white-space: nowrap;">
+                {{ inq.created_at|date:"M d, Y" }}<br>
+                <span style="font-size: 11px;">{{ inq.created_at|time:"h:i A" }}</span>
+              </td>
+              <td>
+                {% if inq.is_resolved %}
+                  <span class="badge badge-success">Resolved</span>
+                {% else %}
+                  <span class="badge badge-warning">Pending Review</span>
+                {% endif %}
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <form method="POST" action="{% url 'storefront:dashboard_inquiry_toggle' inq.id %}" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm {% if inq.is_resolved %}btn-secondary{% else %}btn-gold{% endif %}" title="Toggle Resolved Status">
+                    {% if inq.is_resolved %}
+                      <i class="ri-arrow-go-back-line"></i> Reopen
+                    {% else %}
+                      <i class="ri-check-line"></i> Mark Resolved
+                    {% endif %}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 50px 20px;">
+                <i class="ri-inbox-line" style="font-size: 32px; display: block; margin-bottom: 8px;"></i>
+                No customer inquiries found for this filter.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_content.meta_title|default:"Trade Program | AZI HOME Interior Design Partnership" }}{% endblock %}
+
+{% block content %}
+<section style="background:var(--color-bg-warm); padding:72px 32px; text-align:center;">
+  <div style="max-width:760px; margin:0 auto;">
+    <span style="font-size:0.75rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--color-accent-clay); font-weight:700;">
+      {{ page_content.eyebrow|default:"EXCLUSIVE FOR THE DESIGN TRADE" }}
+    </span>
+    <h1 style="font-family:var(--font-serif); font-size:clamp(2.4rem, 4.5vw, 3.8rem); font-weight:400; margin:16px 0 20px; color:var(--color-ink);">
+      {{ page_content.title|default:"Partner With AZI HOME" }}
+    </h1>
+    <p style="font-size:1.1rem; line-height:1.7; color:var(--color-text-muted);">
+      {{ page_content.subtitle|default:"Exclusive pricing, complimentary swatches, custom sizes and colors, and a dedicated 1:1 account manager to bring your vision to life." }}
+    </p>
+  </div>
+</section>
+
+<div class="section-wrapper" style="padding-top:60px;">
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:64px; align-items:start;">
+    
+    <!-- Left: Trade Perks & Swatches -->
+    <div>
+      <h2 style="font-family:var(--font-serif); font-size:1.8rem; margin-bottom:20px; color:var(--color-ink);">
+        {{ page_content.section_heading|default:"Trade Program Privileges" }}
+      </h2>
+      {% if page_content.body %}
+        <div style="font-size:1rem; line-height:1.8; color:var(--color-text-main); margin-bottom:32px; white-space: pre-line;">
+          {{ page_content.body }}
+        </div>
+      {% else %}
+        <ul class="trade-benefits-list" style="font-size:1rem; margin-bottom:32px;">
+          <li><strong>Designer-Only Margins:</strong> Preferred net trade pricing across all rug & decor categories</li>
+          <li><strong>Complimentary Swatches:</strong> Free memo samples shipped directly to your studio or client</li>
+          <li><strong>Dedicated Concierge:</strong> Single point of contact for inventory inquiries, holds, and order logistics</li>
+          <li><strong>Custom Sizing & Shapes:</strong> Tailored room dimensions, runners, and custom rug designs</li>
+          <li><strong>No Minimum Order Value:</strong> Full flexibility for boutique residential or large-scale estates</li>
+        </ul>
+      {% endif %}
+      <div style="background:#fbfbfa; border:1px solid var(--color-border); overflow:hidden; border-radius:4px;">
+        <img src="{{ page_content.hero_image|default:'https://www.jaipurliving.com/media/wysiwyg/SAG_swatches_CYC_RCT_2__26_1_1__1.jpg' }}" alt="Swatches Presentation" style="width:100%; height:auto;">
+      </div>
+    </div>
+
+    <!-- Right: Application Form -->
+    <div style="background:#ffffff; border:1px solid var(--color-border); padding:40px; box-shadow:var(--shadow-subtle);">
+      <h3 style="font-family:var(--font-serif); font-size:1.6rem; margin-bottom:8px; color:var(--color-ink);">Trade Application</h3>
+      <p style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:24px;">Please complete the form below to establish your trade account.</p>
+
+      <form id="tradePortalForm">
+        <div class="form-grid-2col">
+          <div class="form-field">
+            <label>First Name *</label>
+            <input type="text" name="first_name" class="form-input" required placeholder="Jane">
+          </div>
+          <div class="form-field">
+            <label>Last Name *</label>
+            <input type="text" name="last_name" class="form-input" required placeholder="Doe">
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-field">
+            <label>Company / Firm *</label>
+            <input type="text" name="company" class="form-input" required placeholder="Studio Interiors">
+          </div>
+          <div class="form-field">
+            <label>Business Type</label>
+            <select name="business_type" class="form-select">
+              <option value="Interior Designer">Interior Designer</option>
+              <option value="Architect">Architectural Firm</option>
+              <option value="Hospitality Specifier">Hospitality Specifier</option>
+              <option value="Home Stager">Home Stager</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-field">
+            <label>Business Email *</label>
+            <input type="email" name="email" class="form-input" required placeholder="jane@studiointeriors.com">
+          </div>
+          <div class="form-field">
+            <label>Phone Number</label>
+            <input type="tel" name="phone" class="form-input" placeholder="+1 (555) 000-0000">
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Website or Social Portfolio</label>
+          <input type="url" name="website" class="form-input" placeholder="https://www.studiointeriors.com">
+        </div>
+
+        <div class="form-field">
+          <label>Notes / Project Needs</label>
+          <textarea name="notes" class="form-textarea" rows="3" placeholder="Tell us about your upcoming design project..."></textarea>
+        </div>
+
+        <button type="submit" class="form-submit-btn">Apply For Trade Membership</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.getElementById('tradePortalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const res = await fetch('/api/trade/apply/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message);
+        e.target.reset();
+      } else {
+        alert(data.message || 'Error submitting application.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+</script>
+{% endblock %}

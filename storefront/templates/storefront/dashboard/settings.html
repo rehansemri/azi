@@ -1,0 +1,204 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Sitewide & Header Settings{% endblock %}
+{% block page_subtitle %}Live control over announcement banner, branding logos, shipping thresholds, and footer links{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" action="{% url 'storefront:dashboard_settings' %}">
+  {% csrf_token %}
+
+  <!-- Top Action Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <span class="badge badge-gold" style="font-size: 12px; padding: 6px 12px;">GLOBAL STORE CONFIGURATION</span>
+      <span style="font-size: 12px; color: var(--text-dim);">Changes apply sitewide in real time</span>
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <a href="{% url 'storefront:index' %}" target="_blank" class="btn btn-secondary">
+        <i class="ri-external-link-line"></i> View Live Storefront
+      </a>
+      <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 600;">
+        <i class="ri-save-3-line"></i> Save All Settings
+      </button>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+    <!-- Card 1: Top Announcement Bar -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i class="ri-notification-3-line" style="color: var(--gold-primary);"></i>
+          <span>Sitewide Announcement Bar</span>
+        </div>
+        <div class="form-check" style="margin: 0;">
+          <input type="checkbox" id="announcement_active" name="announcement_active" {% if site_settings.announcement_active %}checked{% endif %}>
+          <label for="announcement_active" style="color: var(--gold-light); font-weight: 600; font-size: 12px; cursor: pointer;">ACTIVE & VISIBLE</label>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label class="form-label">Announcement Banner Text</label>
+          <input type="text" name="announcement_text" class="form-control" value="{{ site_settings.announcement_text }}" placeholder="e.g. COMPLIMENTARY SHIPPING ON ORDERS OVER $500 | EXCLUSIVE TRADE DISCOUNTS">
+          <div class="form-hint">Displayed across the top of every page on desktop and mobile.</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Call to Action Link Text</label>
+            <input type="text" name="announcement_link_text" class="form-control" value="{{ site_settings.announcement_link_text }}" placeholder="e.g. APPLY FOR TRADE">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Destination URL</label>
+            <input type="text" name="announcement_link_url" class="form-control" value="{{ site_settings.announcement_link_url }}" placeholder="e.g. /become-a-partner/">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Banner Background Color</label>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="color" id="bgPicker" value="{{ site_settings.announcement_bg_color|default:'#1F1E1C' }}" onchange="document.getElementById('bgHex').value = this.value" style="width: 44px; height: 38px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer; background: transparent;">
+            <input type="text" id="bgHex" name="announcement_bg_color" class="form-control" value="{{ site_settings.announcement_bg_color|default:'#1F1E1C' }}" onchange="document.getElementById('bgPicker').value = this.value" style="max-width: 140px;">
+            <span style="font-size: 12px; color: var(--text-dim);">Pick any hex or luxury brand tone</span>
+          </div>
+        </div>
+
+        <!-- Live Preview of Announcement Bar -->
+        <div style="margin-top: 18px; padding: 10px 14px; border-radius: 4px; background: {{ site_settings.announcement_bg_color|default:'#1F1E1C' }}; color: #FFF; font-size: 11px; letter-spacing: 1px; text-align: center; border: 1px dashed rgba(255,255,255,0.2);">
+          <span>{{ site_settings.announcement_text|default:"Preview Announcement Message" }}</span>
+          {% if site_settings.announcement_link_text %}
+            <span style="margin-left: 8px; color: var(--gold-light); text-decoration: underline; font-weight: 600;">{{ site_settings.announcement_link_text }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Header Logo & Identity -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i class="ri-shield-star-line" style="color: var(--gold-primary);"></i>
+          <span>Header Brand Identity & Logo</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label class="form-label">Store / Brand Name</label>
+          <input type="text" name="site_name" class="form-control" value="{{ site_settings.site_name|default:'AZI HOME' }}" placeholder="AZI HOME">
+          <div class="form-hint">Used as primary brand wordmark when no custom image logo is uploaded.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Custom Logo Image Upload</label>
+          <input type="file" name="header_logo_file" class="form-control" accept="image/*">
+          <div class="form-hint">Upload SVG, PNG, or WebP logo file with transparent background.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Or Logo Image URL</label>
+          <input type="text" name="header_logo_url" class="form-control" value="{{ site_settings.header_logo_url|default:'' }}" placeholder="https://domain.com/path/to/logo.svg">
+        </div>
+
+        {% if site_settings.header_logo_url %}
+          <div style="margin-top: 12px; padding: 14px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 14px;">
+            <img src="{{ site_settings.header_logo_url }}" alt="Active Logo" style="max-height: 40px; width: auto; object-fit: contain;">
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #FFF;">Current Header Logo</div>
+              <div style="font-size: 11px; color: var(--text-dim);">Live in main header bar</div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="form-group" style="margin-top: 20px;">
+          <label class="form-label">Free Shipping Minimum Threshold ($ USD)</label>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 12px; top: 10px; color: var(--text-dim); font-size: 14px;">$</span>
+            <input type="number" step="0.01" name="free_shipping_threshold" class="form-control" value="{{ site_settings.free_shipping_threshold }}" style="padding-left: 28px;">
+          </div>
+          <div class="form-hint">Used in cart slide-out drawer to calculate dynamic white-glove free shipping progress.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Contact & Concierge Information -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i class="ri-customer-service-2-line" style="color: var(--gold-primary);"></i>
+          <span>Contact & Concierge Information</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Toll-Free Phone</label>
+            <input type="text" name="contact_phone" class="form-control" value="{{ site_settings.contact_phone }}" placeholder="+1 (888) 676-7330">
+          </div>
+          <div class="form-group">
+            <label class="form-label">General Support Email</label>
+            <input type="email" name="contact_email" class="form-control" value="{{ site_settings.contact_email }}" placeholder="support@azi-home.com">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Trade Concierge Email</label>
+            <input type="email" name="trade_email" class="form-control" value="{{ site_settings.trade_email }}" placeholder="trade@azi-home.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Headquarters & Showroom Address</label>
+            <input type="text" name="showroom_address" class="form-control" value="{{ site_settings.showroom_address }}" placeholder="3015 Windward Plaza, Suite 400, Alpharetta, GA 30005">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Social Channels & Footer Notice -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i class="ri-share-line" style="color: var(--gold-primary);"></i>
+          <span>Social Media Channels & Footer Notice</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label"><i class="ri-instagram-line"></i> Instagram URL</label>
+            <input type="url" name="instagram_url" class="form-control" value="{{ site_settings.instagram_url }}" placeholder="https://instagram.com/azihome">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ri-pinterest-line"></i> Pinterest URL</label>
+            <input type="url" name="pinterest_url" class="form-control" value="{{ site_settings.pinterest_url }}" placeholder="https://pinterest.com/azihome">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label"><i class="ri-linkedin-line"></i> LinkedIn URL</label>
+            <input type="url" name="linkedin_url" class="form-control" value="{{ site_settings.linkedin_url }}" placeholder="https://linkedin.com/company/azihome">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ri-youtube-line"></i> YouTube URL</label>
+            <input type="url" name="youtube_url" class="form-control" value="{{ site_settings.youtube_url }}" placeholder="https://youtube.com">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="form-label">Footer Copyright & Legal Attribution</label>
+          <input type="text" name="footer_copyright_text" class="form-control" value="{{ site_settings.footer_copyright_text }}" placeholder="© 2026 AZI HOME Inc. All Rights Reserved. Master Weavers of Rajasthan.">
+          <div class="form-hint">Displayed at the bottom of every page across the entire storefront.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top: 24px; text-align: right;">
+    <button type="submit" class="btn btn-primary" style="padding: 12px 32px; font-weight: 700; font-size: 14px;">
+      <i class="ri-save-3-line"></i> Save All Sitewide Settings
+    </button>
+  </div>
+</form>
+{% endblock %}

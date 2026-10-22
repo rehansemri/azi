@@ -1,0 +1,78 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_content.meta_title|default:"CallaLuxe by AZI HOME | Luxury Performance Rugs" }}{% endblock %}
+
+{% block content %}
+<!-- CallaLuxe Dedicated Hero -->
+<section style="background-color:#1c1b1a; color:#fff; padding: 100px 32px; text-align:center; position:relative; overflow:hidden;">
+  {% if page_content.hero_image %}
+    <div style="position:absolute; inset:0; opacity:0.25; z-index:0;">
+      <img src="{{ page_content.hero_image }}" alt="CallaLuxe Hero" style="width:100%; height:100%; object-fit:cover;">
+    </div>
+  {% endif %}
+  <div style="max-width:860px; margin:0 auto; position:relative; z-index:1;">
+    <span style="font-size:0.8rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--color-accent-clay); font-weight:700;">
+      {{ page_content.eyebrow|default:"EXCLUSIVE FIBER TECHNOLOGY" }}
+    </span>
+    <h1 style="font-family:var(--font-serif); font-size:clamp(2.8rem, 5vw, 4.2rem); font-weight:400; margin:16px 0 20px;">
+      {{ page_content.title|default:"CallaLuxe" }}
+    </h1>
+    <p style="font-size:1.15rem; line-height:1.7; color:rgba(255,255,255,0.85); margin-bottom:36px;">
+      {{ page_content.subtitle|default:"Redefining the new standard in luxury performance rugs. Innovative yarn construction delivers the tactile softness and organic texture of wool with uncompromised resilience against spills, sunlight, and heavy traffic." }}
+    </p>
+    <a href="{{ page_content.cta_primary_url|default:'#callaluxeCatalog' }}" class="btn-luxury-primary">
+      {{ page_content.cta_primary_text|default:"Shop The Collection" }}
+    </a>
+  </div>
+</section>
+
+<!-- Features Grid -->
+<div class="section-wrapper" style="padding-top:60px; padding-bottom:40px;">
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:32px; text-align:center;">
+    <div style="padding:24px; background:var(--color-bg-warm);">
+      <h3 style="font-family:var(--font-serif); font-size:1.3rem; margin-bottom:10px;">Solution-Dyed Core</h3>
+      <p style="font-size:0.88rem; color:var(--color-text-muted); line-height:1.6;">Color is infused at the fiber’s core during liquid state, making each strand impervious to fading and bleach cleaning.</p>
+    </div>
+    <div style="padding:24px; background:var(--color-bg-warm);">
+      <h3 style="font-family:var(--font-serif); font-size:1.3rem; margin-bottom:10px;">Soft Hand Feel</h3>
+      <p style="font-size:0.88rem; color:var(--color-text-muted); line-height:1.6;">Engineered with fine-denier spun filaments to feel luxurious and inviting barefoot in high-end living spaces.</p>
+    </div>
+    <div style="padding:24px; background:var(--color-bg-warm);">
+      <h3 style="font-family:var(--font-serif); font-size:1.3rem; margin-bottom:10px;">Low-Profile Flatweave</h3>
+      <p style="font-size:0.88rem; color:var(--color-text-muted); line-height:1.6;">Handwoven by master artisans without pile shedding, making furniture gliding effortless and vacuuming seamless.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Products Grid -->
+<div class="section-wrapper" id="callaluxeCatalog" style="padding-top:20px;">
+  <div class="section-header-centered">
+    <h2 class="section-heading-main">CallaLuxe Canyon Series</h2>
+  </div>
+
+  <div class="product-grid-4col">
+    {% for product in products %}
+      <div class="product-card" onclick="if(!event.target.closest('.wishlist-btn')) window.location.href='{% url 'storefront:product_detail' product.slug %}'">
+        <div class="product-card-img-wrap">
+          <a href="{% url 'storefront:product_detail' product.slug %}">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+          </a>
+          <span class="product-badge">CallaLuxe Exclusive</span>
+          <button class="wishlist-btn" title="Add to Project List" onclick="event.stopPropagation(); toggleWishlist(this, {{ product.id }})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="product-card-info">
+          <span class="product-card-collection">{{ product.collection }}</span>
+          <a href="{% url 'storefront:product_detail' product.slug %}" class="product-card-name">{{ product.name }}</a>
+          <span class="product-card-meta">{{ product.construction }} • {{ product.material }}</span>
+          <div class="product-card-price">From ${{ product.price_from|floatformat:2 }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_content.meta_title|default:"The AZI HOME Story & Craft | Artisan Heritage" }}{% endblock %}
+
+{% block content %}
+<section class="heritage-fullbleed-section" style="min-height:480px;">
+  <img src="{{ page_content.hero_image|default:'https://www.jaipurliving.com/media/wysiwyg/2A5A3712-Weavers_1920x600_1.jpg' }}" alt="{{ page_content.title|default:'Jaipur Weavers' }}" class="heritage-fullbleed-bg">
+  <div class="heritage-fullbleed-content">
+    <div class="heritage-fullbleed-eyebrow">{{ page_content.eyebrow|default:"A PURPOSE-DRIVEN JOURNEY" }}</div>
+    <h1 class="heritage-fullbleed-title">{{ page_content.title|default:"The AZI HOME Story" }}</h1>
+    <p class="heritage-fullbleed-desc">
+      {{ page_content.subtitle|default:"Connecting people through handmade beauty since 1978. Rooted in social impact and ancestral craft." }}
+    </p>
+  </div>
+</section>
+
+<div class="section-wrapper" style="max-width:960px; padding-top:64px;">
+  {% if page_content.highlight_text %}
+    <div style="font-family:var(--font-editorial); font-size:1.6rem; line-height:1.6; color:var(--color-ink); font-style:italic; margin-bottom:44px; text-align:center;">
+      {{ page_content.highlight_text }}
+    </div>
+  {% endif %}
+
+  <div style="font-size:1.05rem; line-height:1.8; color:var(--color-text-main); margin-bottom:48px;">
+    {% if page_content.section_heading %}
+      <h2 style="font-family:var(--font-serif); font-size:1.8rem; margin-bottom:16px; color:var(--color-ink);">{{ page_content.section_heading }}</h2>
+    {% endif %}
+    {% if page_content.body %}
+      <div style="white-space: pre-line; margin-bottom:20px;">{{ page_content.body }}</div>
+    {% else %}
+      <p style="margin-bottom:20px;">
+        In 1978, N.K. Chaudhary founded Azi Home with two looms and nine artisans. Rejecting predatory middlemen, he created an unprecedented grassroots network that directly empowered rural women and hereditary weavers across Bhadohi, India.
+      </p>
+      <p>
+        Today, AZI HOME continues this legacy under daughter Asha Chaudhary’s leadership in Atlanta, bringing museum-grade handmade luxury to premier interior designers and architectural projects worldwide.
+      </p>
+    {% endif %}
+  </div>
+
+  {% if page_content.secondary_image %}
+    <div style="margin-bottom:48px; border-radius:4px; overflow:hidden;">
+      <img src="{{ page_content.secondary_image }}" alt="Heritage Workshop" style="width:100%; max-height:420px; object-fit:cover;">
+    </div>
+  {% endif %}
+
+  <div id="foundation" style="background:var(--color-bg-warm); padding:40px; margin-bottom:48px; border-left:4px solid var(--color-accent-clay);">
+    <h3 style="font-family:var(--font-serif); font-size:1.5rem; margin-bottom:12px; color:var(--color-ink);">{{ page_content.section_subheading|default:"Azi Home Foundation" }}</h3>
+    <p style="font-size:0.95rem; line-height:1.7; color:var(--color-text-muted);">
+      Through education, healthcare access, literacy initiatives, and financial inclusion, the Azi Home Foundation transforms rural artisan communities, fostering sustainable livelihoods for more than 40,000 weavers and their families across 600 villages in Bhadohi.
+    </p>
+  </div>
+
+  <div style="text-align:center; padding:32px 0;">
+    <a href="{{ page_content.cta_primary_url|default:'/rugs/' }}" class="btn-luxury-dark">{{ page_content.cta_primary_text|default:"Explore The Artisan Collection" }}</a>
+  </div>
+</div>
+{% endblock %}

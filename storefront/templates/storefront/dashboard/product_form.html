@@ -1,0 +1,861 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}{% if is_edit %}Edit Product: {{ product.name }}{% else %}Add New Catalog Product{% endif %}{% endblock %}
+{% block page_subtitle %}{% if is_edit %}Modify details, upload images, and manage multiple sizes with dynamic pricing in the database{% else %}Create a new luxury rug with direct image upload and multiple size variants{% endif %}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'storefront:dashboard_products' %}" class="btn btn-secondary">
+    <i class="ri-arrow-left-line"></i> Back to Products
+  </a>
+  {% if is_edit %}
+    <a href="{% url 'storefront:dashboard_product_variants' product.id %}" class="btn btn-gold">
+      <i class="ri-price-tag-3-line"></i> Manage Sizes & Pricing ({{ product.variants.count }})
+    </a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<form method="POST" id="productForm" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <!-- Container for deleted variant IDs -->
+  <div id="deletedVariantsContainer"></div>
+
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px; align-items: start;">
+    
+    <!-- LEFT COLUMN: MAIN SPECS, IMAGERY & MULTI-SIZES -->
+    <div>
+      
+      <!-- 1. BASIC DETAILS -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="ri-information-line" style="color: var(--gold-primary);"></i>
+            <span>Basic Product Details</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">Product Name *</label>
+              <input type="text" name="name" class="form-control" value="{{ product.name }}" placeholder="e.g. Tierzah TRZ05 Slate / Ivory Rug" required id="inputName">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Catalog Code / SKU Prefix *</label>
+              <input type="text" name="catalog_code" class="form-control" value="{{ product.catalog_code }}" placeholder="e.g. TRZ05" required id="inputCode">
+              <div class="form-hint">Used for live URL slug (e.g. /tierzah-trz05.html)</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Curated Collection *</label>
+              <select name="collection_obj" class="form-control" id="selectCollection" onchange="document.getElementById('inputCollection').value = this.options[this.selectedIndex].text">
+                <option value="">-- Select Collection --</option>
+                {% for col in collections %}
+                  <option value="{{ col.id }}" {% if product.collection_obj_id == col.id or product.collection == col.name %}selected{% endif %}>{{ col.name }}</option>
+                {% endfor %}
+              </select>
+              <input type="hidden" name="collection" id="inputCollection" value="{{ product.collection|default:'Tierzah' }}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Guest Designer / Studio</label>
+              <select name="designer" class="form-control">
+                <option value="">-- AZI HOME Heritage In-House --</option>
+                {% for des in designers %}
+                  <option value="{{ des.id }}" {% if product.designer_id == des.id %}selected{% endif %}>{{ des.name }} ({{ des.title }})</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Primary Color & Palette</label>
+              <select name="primary_color" class="form-control">
+                <option value="">-- Select Dominant Color --</option>
+                {% for col in colors %}
+                  <option value="{{ col.id }}" {% if product.primary_color_id == col.id %}selected{% endif %}>
+                    {{ col.name }} ({{ col.get_color_family_display }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select name="category" class="form-control">
+                {% for cat in categories %}
+                  <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Starting Price ($ USD) *</label>
+              <input type="number" step="0.01" name="price_from" class="form-control" value="{{ product.price_from|default:'1250.00' }}" required id="inputPrice">
+              <div class="form-hint">Displayed as "Starting at $X" on catalog grids</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Badge / Ribbon (Optional)</label>
+              <input type="text" name="badge" class="form-control" value="{{ product.badge }}" placeholder="e.g. New Arrival, High Point Market, Best Seller">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. PRODUCT IMAGERY WITH DIRECT FILE UPLOAD -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="ri-image-add-line" style="color: var(--gold-primary);"></i>
+            <span>Product Imagery (Upload From Computer or Paste URL)</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          
+          <!-- Primary Image -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="form-label" style="margin-bottom:0; color:#FFF; font-size:13px;">
+                <i class="ri-camera-lens-line" style="color:var(--gold-primary); margin-right:4px;"></i>
+                Primary Hero Image (Main Product Shot) *
+              </label>
+              <span class="badge badge-gold">Required</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-upload-cloud-line"></i> Upload Image File:
+                </label>
+                <input type="file" name="image_file" id="primaryFileInput" accept="image/*" class="form-control" style="padding: 7px 10px; font-size: 12.5px;">
+              </div>
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-link"></i> Or Image Web URL:
+                </label>
+                <input type="text" name="image_url" id="inputImg" class="form-control" value="{{ product.image_url }}" placeholder="https://..." {% if not product.image_url %}required{% endif %}>
+              </div>
+            </div>
+            {% if product.image_url %}
+              <div style="font-size: 11.5px; color: var(--gold-light); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="ri-check-line"></i> Current Image: <a href="{{ product.image_url }}" target="_blank" style="color: var(--gold-light); text-decoration: underline;">{{ product.image_url|truncatechars:60 }}</a>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Secondary Texture Image -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <label class="form-label" style="color:#FFF; font-size:13px; margin-bottom:8px;">
+              <i class="ri-zoom-in-line" style="color:var(--gold-primary); margin-right:4px;"></i>
+              Secondary / Weave Texture Close-Up
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-upload-cloud-line"></i> Upload Texture File:
+                </label>
+                <input type="file" name="secondary_image_file" accept="image/*" class="form-control" style="padding: 7px 10px; font-size: 12.5px;">
+              </div>
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-link"></i> Or Texture Web URL:
+                </label>
+                <input type="text" name="secondary_image_url" class="form-control" value="{{ product.secondary_image_url }}" placeholder="https://...">
+              </div>
+            </div>
+          </div>
+
+          <!-- Lifestyle Image -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <label class="form-label" style="color:#FFF; font-size:13px; margin-bottom:8px;">
+              <i class="ri-home-4-line" style="color:var(--gold-primary); margin-right:4px;"></i>
+              Lifestyle / Living Room Setting
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-upload-cloud-line"></i> Upload Lifestyle File:
+                </label>
+                <input type="file" name="lifestyle_image_file" accept="image/*" class="form-control" style="padding: 7px 10px; font-size: 12.5px;">
+              </div>
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-link"></i> Or Lifestyle Web URL:
+                </label>
+                <input type="text" name="lifestyle_image_url" class="form-control" value="{{ product.lifestyle_image_url }}" placeholder="https://...">
+              </div>
+            </div>
+            {% if product.lifestyle_image_url %}
+              <div style="font-size: 11.5px; color: var(--gold-light); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="ri-check-line"></i> Current Lifestyle: <a href="{{ product.lifestyle_image_url }}" target="_blank" style="color: var(--gold-light); text-decoration: underline;">{{ product.lifestyle_image_url|truncatechars:60 }}</a>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Product Ambient Video -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <label class="form-label" style="color:#FFF; font-size:13px; margin-bottom:8px;">
+              <i class="ri-video-line" style="color:var(--gold-primary); margin-right:4px;"></i>
+              Product Feature Video (MP4 / WebM / MOV)
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-upload-cloud-line"></i> Upload Video File:
+                </label>
+                <input type="file" name="video_file" accept="video/*" class="form-control" style="padding: 7px 10px; font-size: 12.5px;">
+              </div>
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-link"></i> Or Video Web URL:
+                </label>
+                <input type="text" name="video_url" class="form-control" value="{{ product.video_url }}" placeholder="https://... or /media/videos/...">
+              </div>
+            </div>
+            {% if product.video_url %}
+              <div style="font-size: 11.5px; color: var(--gold-light); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="ri-play-circle-line"></i> Current Video: <a href="{{ product.video_url }}" target="_blank" style="color: var(--gold-light); text-decoration: underline;">{{ product.video_url|truncatechars:60 }}</a>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- 3D / Augmented Reality (AR) Model -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <label class="form-label" style="color:#FFF; font-size:13px; margin-bottom:8px;">
+              <i class="ri-box-3-line" style="color:var(--gold-primary); margin-right:4px;"></i>
+              3D / Augmented Reality (AR) Model (USDZ / GLB)
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-upload-cloud-line"></i> Upload 3D File:
+                </label>
+                <input type="file" name="ar_model_file" accept=".usdz,.glb,.gltf,.obj" class="form-control" style="padding: 7px 10px; font-size: 12.5px;">
+              </div>
+              <div>
+                <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">
+                  <i class="ri-link"></i> Or 3D Model Web URL:
+                </label>
+                <input type="text" name="ar_model_url" class="form-control" value="{{ product.ar_model_url }}" placeholder="https://... or /media/models3d/...">
+              </div>
+            </div>
+            {% if product.ar_model_url %}
+              <div style="font-size: 11.5px; color: var(--gold-light); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="ri-box-3-fill"></i> Current 3D Model: <a href="{{ product.ar_model_url }}" target="_blank" style="color: var(--gold-light); text-decoration: underline;">{{ product.ar_model_url|truncatechars:60 }}</a>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Multi-File Gallery Images -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <label class="form-label" style="color:#FFF; font-size:13px; margin-bottom:4px;">
+              <i class="ri-gallery-line" style="color:var(--gold-primary); margin-right:4px;"></i>
+              Additional Multi-Angle Gallery Shots (Select Multiple Files)
+            </label>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+              Hold Ctrl/Shift to choose multiple photos at once. They will be added to the product carousel and thumbnail switcher.
+            </div>
+            <input type="file" name="gallery_images" multiple accept="image/*" class="form-control" style="padding: 8px 12px; font-size: 12.5px;">
+
+            {% if product.images.all %}
+              <div style="margin-top: 14px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">
+                  Existing Gallery Images ({{ product.images.count }}):
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  {% for img in product.images.all %}
+                    <div style="width: 60px; height: 60px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); position: relative;">
+                      <img src="{{ img.image_url }}" alt="Gallery shot" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 3. DYNAMIC SIZES & PRICING MATRIX -->
+      <div class="panel">
+        <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div class="panel-title">
+              <i class="ri-shape-line" style="color: var(--gold-primary);"></i>
+              <span>Sizes & Dynamic Pricing Matrix</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+              Add multiple sizes with their respective prices. These records are saved in the database and loaded directly by the product page.
+            </div>
+          </div>
+          <button type="button" class="btn btn-gold btn-sm" onclick="addCustomSizeRow()">
+            <i class="ri-add-line"></i> Add Size Row
+          </button>
+        </div>
+        <div class="panel-body">
+          
+          <!-- Quick Preset Buttons -->
+          <div style="margin-bottom: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+              Quick Add Presets:
+            </span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPresetRow('18&quot; Swatch', '25.00')">
+              + 18" Swatch ($25)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPresetRow('2\'6&quot;X8\' Runner', (parseFloat(document.getElementById('inputPrice').value || 1250) * 0.75).toFixed(2))">
+              + 2'6"X8' Runner
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPresetRow('6\'X9\'', (parseFloat(document.getElementById('inputPrice').value || 1250) * 1.0).toFixed(2))">
+              + 6'X9'
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPresetRow('8\'X10\'', (parseFloat(document.getElementById('inputPrice').value || 1250) * 1.45).toFixed(2))">
+              + 8'X10'
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPresetRow('9\'X12\'', (parseFloat(document.getElementById('inputPrice').value || 1250) * 1.95).toFixed(2))">
+              + 9'X12'
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPresetRow('10\'X14\'', (parseFloat(document.getElementById('inputPrice').value || 1250) * 2.65).toFixed(2))">
+              + 10'X14'
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPresetRow('12\'X15\'', (parseFloat(document.getElementById('inputPrice').value || 1250) * 3.40).toFixed(2))">
+              + 12'X15'
+            </button>
+          </div>
+
+          <!-- Sizes Table -->
+          <div class="data-table-wrapper">
+            <table class="data-table" id="sizesTable">
+              <thead>
+                <tr>
+                  <th style="min-width: 140px;">Size Dimension *</th>
+                  <th style="min-width: 160px;">SKU (Auto or Custom)</th>
+                  <th style="min-width: 130px;">Live Price ($ USD) *</th>
+                  <th style="text-align: right; width: 60px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="sizesTableBody">
+                {% if is_edit and product.variants.all %}
+                  {% for variant in product.variants.all %}
+                    <tr id="variantRow_{{ variant.id }}">
+                      <td>
+                        <input type="hidden" name="variant_id[]" value="{{ variant.id }}">
+                        <input type="text" name="variant_size[]" class="form-control" value="{{ variant.size }}" required placeholder="e.g. 8'X10'">
+                      </td>
+                      <td>
+                        <input type="text" name="variant_sku[]" class="form-control" value="{{ variant.sku }}" placeholder="e.g. TRZ05-8X10">
+                      </td>
+                      <td>
+                        <input type="number" step="0.01" name="variant_price[]" class="form-control" value="{{ variant.price }}" required style="font-weight: 700; color: var(--gold-light);">
+                      </td>
+                      <td style="text-align: right;">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeVariantRow(this, '{{ variant.id }}')" title="Remove Size">
+                          <i class="ri-delete-bin-line"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <!-- Standard Default Rows for New Rug Creation -->
+                  <tr class="new-variant-row">
+                    <td>
+                      <input type="hidden" name="variant_id[]" value="">
+                      <input type="text" name="variant_size[]" class="form-control" value="18&quot; Swatch" required>
+                    </td>
+                    <td>
+                      <input type="text" name="variant_sku[]" class="form-control" value="" placeholder="Auto-generated">
+                    </td>
+                    <td>
+                      <input type="number" step="0.01" name="variant_price[]" class="form-control" value="25.00" required style="font-weight: 700; color: var(--gold-light);">
+                    </td>
+                    <td style="text-align: right;">
+                      <button type="button" class="btn btn-danger btn-sm" onclick="removeVariantRow(this, '')">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="new-variant-row">
+                    <td>
+                      <input type="hidden" name="variant_id[]" value="">
+                      <input type="text" name="variant_size[]" class="form-control" value="6'X9'" required>
+                    </td>
+                    <td>
+                      <input type="text" name="variant_sku[]" class="form-control" value="" placeholder="Auto-generated">
+                    </td>
+                    <td>
+                      <input type="number" step="0.01" name="variant_price[]" class="form-control" value="1250.00" required style="font-weight: 700; color: var(--gold-light);">
+                    </td>
+                    <td style="text-align: right;">
+                      <button type="button" class="btn btn-danger btn-sm" onclick="removeVariantRow(this, '')">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="new-variant-row">
+                    <td>
+                      <input type="hidden" name="variant_id[]" value="">
+                      <input type="text" name="variant_size[]" class="form-control" value="8'X10'" required>
+                    </td>
+                    <td>
+                      <input type="text" name="variant_sku[]" class="form-control" value="" placeholder="Auto-generated">
+                    </td>
+                    <td>
+                      <input type="number" step="0.01" name="variant_price[]" class="form-control" value="1812.00" required style="font-weight: 700; color: var(--gold-light);">
+                    </td>
+                    <td style="text-align: right;">
+                      <button type="button" class="btn btn-danger btn-sm" onclick="removeVariantRow(this, '')">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="new-variant-row">
+                    <td>
+                      <input type="hidden" name="variant_id[]" value="">
+                      <input type="text" name="variant_size[]" class="form-control" value="9'X12'" required>
+                    </td>
+                    <td>
+                      <input type="text" name="variant_sku[]" class="form-control" value="" placeholder="Auto-generated">
+                    </td>
+                    <td>
+                      <input type="number" step="0.01" name="variant_price[]" class="form-control" value="2438.00" required style="font-weight: 700; color: var(--gold-light);">
+                    </td>
+                    <td style="text-align: right;">
+                      <button type="button" class="btn btn-danger btn-sm" onclick="removeVariantRow(this, '')">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="new-variant-row">
+                    <td>
+                      <input type="hidden" name="variant_id[]" value="">
+                      <input type="text" name="variant_size[]" class="form-control" value="10'X14'" required>
+                    </td>
+                    <td>
+                      <input type="text" name="variant_sku[]" class="form-control" value="" placeholder="Auto-generated">
+                    </td>
+                    <td>
+                      <input type="number" step="0.01" name="variant_price[]" class="form-control" value="3312.00" required style="font-weight: 700; color: var(--gold-light);">
+                    </td>
+                    <td style="text-align: right;">
+                      <button type="button" class="btn btn-danger btn-sm" onclick="removeVariantRow(this, '')">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addCustomSizeRow()">
+              <i class="ri-add-line"></i> Add Another Size Row
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 4. CRAFTSMANSHIP & SPECIFICATIONS -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="ri-hammer-line" style="color: var(--gold-primary);"></i>
+            <span>Artisan Craftsmanship & Specifications</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Construction Technique</label>
+              <select name="construction_type" class="form-control" onchange="document.getElementById('inputConstruction').value = this.options[this.selectedIndex].text">
+                {% for ct in constructions %}
+                  <option value="{{ ct.id }}" {% if product.construction_type_id == ct.id or product.construction == ct.name %}selected{% endif %}>{{ ct.name }} ({{ ct.knot_count_typical }})</option>
+                {% endfor %}
+              </select>
+              <input type="hidden" name="construction" id="inputConstruction" value="{{ product.construction|default:'Hand Knotted' }}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Primary Material</label>
+              <select name="primary_material" class="form-control" onchange="document.getElementById('inputMaterial').value = this.options[this.selectedIndex].text">
+                {% for mat in materials %}
+                  <option value="{{ mat.id }}" {% if product.primary_material_id == mat.id or product.material == mat.name %}selected{% endif %}>{{ mat.name }}</option>
+                {% endfor %}
+              </select>
+              <input type="hidden" name="material" id="inputMaterial" value="{{ product.material|default:'100% Wool' }}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Primary Color & Palette</label>
+              <select name="primary_color" class="form-control">
+                <option value="">-- Select Color Palette --</option>
+                {% for col in colors %}
+                  <option value="{{ col.id }}" {% if product.primary_color_id == col.id %}selected{% endif %}>
+                    {{ col.name }} ({{ col.get_color_family_display }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Knot Count / Weave Density</label>
+              <input type="text" name="knot_count" class="form-control" value="{{ product.knot_count|default:'80-120 KPSI' }}" placeholder="e.g. 80-120 KPSI, 150+ KPSI Master Knot">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Traffic Suitability Rating</label>
+              <select name="traffic_rating" class="form-control">
+                {% for code, label in traffic_choices %}
+                  <option value="{{ code }}" {% if product.traffic_rating == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Country of Origin</label>
+              <input type="text" name="origin" class="form-control" value="{{ product.origin|default:'Rajasthan, India' }}" placeholder="e.g. Rajasthan, India">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Pile Height & Thickness</label>
+              <input type="text" name="pile_height" class="form-control" value="{{ product.pile_height|default:'1/2\"' }}" placeholder="e.g. 1/2\", 3/8\", Flatweave">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Rug Backing Material</label>
+              <input type="text" name="backing" class="form-control" value="{{ product.backing|default:'Cotton Weft / Canvas' }}" placeholder="e.g. Cotton Weft / Canvas, No Backing">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">3D Augmented Reality Model (USDZ/GLB)</label>
+              <input type="url" name="ar_model_url" class="form-control" value="{{ product.ar_model_url }}" placeholder="https://...model.usdz">
+            </div>
+
+            <!-- Rug Features & Functional Certifications Multi-Select (Database Model) -->
+            <div class="form-group" style="grid-column: 1 / -1; background: rgba(201, 169, 130, 0.04); border: 1px solid rgba(201, 169, 130, 0.25); border-radius: 8px; padding: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                <label class="form-label" style="margin-bottom: 0; color: #FFF; font-size: 13px;">
+                  <i class="ri-shield-star-line" style="color: var(--gold-primary); margin-right: 4px;"></i>
+                  Rug Features & Special Attributes (From ProductFeature Model)
+                </label>
+                <span class="badge badge-gold">{{ features|length }} Managed in Dashboard</span>
+              </div>
+              <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;">
+                Select all features that apply to this rug (Performance, Indoor/Outdoor, Washables, Stain Resistant Coating, Rug Pads, Floor Heating Safe, etc.). These appear in the storefront mega-menu and filtering matrix.
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px;">
+                {% for feat in features %}
+                  <label style="background: rgba(0,0,0,0.35); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                    <input type="checkbox" name="features" value="{{ feat.id }}" {% if feat in product.features.all %}checked{% endif %}>
+                    <span><i class="{{ feat.icon|default:'ri-checkbox-circle-line' }}" style="color: var(--gold-light); margin-right: 4px;"></i> {{ feat.name }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Styles Multi-Select -->
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">Design Aesthetic & Styles</label>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                {% for st in styles %}
+                  <label style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" name="styles" value="{{ st.id }}" {% if st in product.styles.all %}checked{% endif %}>
+                    <span>{{ st.name }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Suitable Rooms Multi-Select -->
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">Suitable Room Placements</label>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                {% for rm in rooms %}
+                  <label style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" name="rooms" value="{{ rm.id }}" {% if rm in product.rooms.all %}checked{% endif %}>
+                    <span>{{ rm.name }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Shapes Available Multi-Select -->
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">Available Shapes</label>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                {% for sh in shapes %}
+                  <label style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" name="shapes" value="{{ sh.id }}" {% if sh in product.shapes.all %}checked{% endif %}>
+                    <span>{{ sh.name }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+
+
+            <!-- Artisan Story & Description with Prefilled Default & Presets -->
+            <div class="form-group" style="grid-column: 1 / -1; background: rgba(255,255,255,0.015); border: 1px solid var(--border-color); padding: 18px; border-radius: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                <label class="form-label" style="margin-bottom: 0; color: #FFF; font-size: 13px;">
+                  <i class="ri-quill-pen-line" style="color: var(--gold-primary); margin-right: 4px;"></i>
+                  Artisan Story & Description
+                </label>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <span style="font-size: 11px; color: var(--text-dim); align-self: center;">Quick Presets:</span>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setStoryPreset('heritage')">
+                    <i class="ri-history-line"></i> Heritage Story
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setStoryPreset('handknotted')">
+                    Hand-Knotted
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setStoryPreset('callaluxe')">
+                    CallaLuxe Performance
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setStoryPreset('silk')">
+                    Silk & Wool Luster
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setStoryPreset('jute')">
+                    Organic Jute
+                  </button>
+                </div>
+              </div>
+              <textarea name="description" id="inputDescription" class="form-control" rows="4" placeholder="Describe the design inspiration, heritage weaving technique, and texture..." style="line-height: 1.6;">{% if product.description %}{{ product.description }}{% else %}Handcrafted by generational master weavers in Rajasthan, India, this heirloom-quality rug unites centuries-old knotting artistry with contemporary interior elegance. Spun from pure natural fibers with meticulous knot-by-knot precision, each piece embodies the dedication, soulful craft, and human touch of over 40,000 artisan families.{% endif %}</textarea>
+              <div class="form-hint">Displayed prominently on the Product Detail Page and collection catalog highlights.</div>
+            </div>
+
+            <!-- Care Instructions with Prefilled Default & Presets -->
+            <div class="form-group" style="grid-column: 1 / -1; background: rgba(255,255,255,0.015); border: 1px solid var(--border-color); padding: 18px; border-radius: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                <label class="form-label" style="margin-bottom: 0; color: #FFF; font-size: 13px;">
+                  <i class="ri-shield-cross-line" style="color: var(--gold-primary); margin-right: 4px;"></i>
+                  Care Instructions & Maintenance Protocol
+                </label>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <span style="font-size: 11px; color: var(--text-dim); align-self: center;">Care Presets:</span>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setCarePreset('default')">
+                    <i class="ri-shield-check-line"></i> Default Protocol
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setCarePreset('wool')">
+                    Wool & Natural
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setCarePreset('callaluxe')">
+                    CallaLuxe Bleach-Cleanable
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="setCarePreset('silk')">
+                    Silk & Fine Blend
+                  </button>
+                </div>
+              </div>
+              <textarea name="care_instructions" id="inputCareInstructions" class="form-control" rows="3" placeholder="e.g. Vacuum regularly without beater bar. Professional rug cleaning recommended." style="line-height: 1.6;">{% if product.care_instructions %}{{ product.care_instructions }}{% else %}Vacuum regularly on low-power suction-only setting without a rotating beater bar. Spot clean spills immediately by blotting with a clean, undyed cloth and mild pH-neutral soap. Professional hand immersion rug cleaning recommended every 3-5 years. Rug pad recommended to prevent slipping and extend fiber longevity.{% endif %}</textarea>
+              <div class="form-hint">Provides essential cleaning and longevity instructions for designers and collectors.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: STATUS & LIVE PREVIEW -->
+    <div style="position: sticky; top: 90px;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="ri-toggle-line" style="color: var(--gold-primary);"></i>
+            <span>Publishing Status</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-check">
+            <input type="checkbox" name="is_in_stock" id="is_in_stock" {% if not product or product.is_in_stock %}checked{% endif %}>
+            <label for="is_in_stock" style="cursor: pointer; font-weight: 500;">
+              In Stock & Ready to Ship
+            </label>
+          </div>
+
+          <div class="form-check" style="margin-top: 16px;">
+            <input type="checkbox" name="is_trending" id="is_trending" {% if product.is_trending %}checked{% endif %}>
+            <label for="is_trending" style="cursor: pointer; font-weight: 500;">
+              Feature in "Trending Now" Section
+            </label>
+          </div>
+
+          <div class="form-check" style="margin-top: 16px;">
+            <input type="checkbox" name="is_callaluxe" id="is_callaluxe" {% if product.is_callaluxe %}checked{% endif %}>
+            <label for="is_callaluxe" style="cursor: pointer; font-weight: 500;">
+              Include in "Callaluxe Luxury" Showcase
+            </label>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+          <button type="submit" class="btn btn-gold" style="width: 100%; justify-content: center; padding: 12px;">
+            <i class="ri-save-line"></i>
+            <span>{% if is_edit %}Save Changes & Sync Sizes{% else %}Create Product & Save All Sizes{% endif %}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LIVE CARD PREVIEW -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title" style="font-size: 16px;">
+            <i class="ri-eye-line" style="color: var(--gold-primary);"></i>
+            <span>Storefront Card Preview</span>
+          </div>
+        </div>
+        <div class="panel-body" style="text-align: center;">
+          <div style="background: #0D1117; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); text-align: left;">
+            <div style="height: 240px; background: #182030; position: relative; overflow: hidden;">
+              <img id="previewImg" src="{{ product.image_url|default:'https://images.unsplash.com/photo-1600121848594-d8644e57abab?auto=format&fit=crop&w=800&q=80' }}" style="width: 100%; height: 100%; object-fit: cover;">
+              <span id="previewBadge" class="badge badge-gold" style="position: absolute; top: 12px; left: 12px;">{{ product.badge|default:'Hand Knotted' }}</span>
+            </div>
+            <div style="padding: 16px;">
+              <div id="previewCode" style="font-size: 11px; color: var(--gold-light); font-weight: 600; text-transform: uppercase;">{{ product.catalog_code|default:'TRZ05' }}</div>
+              <div id="previewName" style="font-weight: 600; color: #FFF; font-size: 14px; margin-top: 2px;">{{ product.name|default:'Tierzah TRZ05' }}</div>
+              <div id="previewCollection" style="font-size: 12px; color: var(--text-dim); margin-top: 2px;">Collection: {{ product.collection|default:'Tierzah' }}</div>
+              <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 11px; color: var(--text-muted);">Starting at</span>
+                <span id="previewPrice" style="font-size: 16px; font-weight: 700; color: var(--gold-light);">${{ product.price_from|default:'1250.00' }}</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-dim); margin-top: 10px;">
+            Preview updates live as you type or pick image files
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</form>
+
+<style>
+  @keyframes goldGlowFlash {
+    0% { box-shadow: 0 0 0 0 rgba(201, 169, 130, 0.8); border-color: #E0C7A8; }
+    40% { box-shadow: 0 0 20px 4px rgba(201, 169, 130, 0.45); border-color: #E0C7A8; }
+    100% { box-shadow: none; border-color: var(--border-color); }
+  }
+  .pulse-glow {
+    animation: goldGlowFlash 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+</style>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Live Preview Listeners
+  const nameInput = document.getElementById('inputName');
+  const codeInput = document.getElementById('inputCode');
+  const colInput = document.getElementById('inputCollection');
+  const priceInput = document.getElementById('inputPrice');
+  const imgInput = document.getElementById('inputImg');
+  const primaryFileInput = document.getElementById('primaryFileInput');
+
+  const previewName = document.getElementById('previewName');
+  const previewCode = document.getElementById('previewCode');
+  const previewCol = document.getElementById('previewCollection');
+  const previewPrice = document.getElementById('previewPrice');
+  const previewImg = document.getElementById('previewImg');
+
+  if (nameInput) nameInput.addEventListener('input', e => { previewName.textContent = e.target.value || 'Product Name'; });
+  if (codeInput) codeInput.addEventListener('input', e => { previewCode.textContent = e.target.value || 'CODE'; });
+  if (colInput) colInput.addEventListener('input', e => { previewCol.textContent = 'Collection: ' + (e.target.value || 'Tierzah'); });
+  if (priceInput) priceInput.addEventListener('input', e => { previewPrice.textContent = '$' + (e.target.value || '1250.00'); });
+  if (imgInput) imgInput.addEventListener('input', e => { if (e.target.value) previewImg.src = e.target.value; });
+
+  // Instant local preview when file is selected from disk
+  if (primaryFileInput) {
+    primaryFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          previewImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  // Dynamic Multiple Sizes Management
+  function addCustomSizeRow(sizeVal = '', priceVal = '', skuVal = '') {
+    const tbody = document.getElementById('sizesTableBody');
+    const tr = document.createElement('tr');
+    tr.className = 'new-variant-row';
+    tr.innerHTML = `
+      <td>
+        <input type="hidden" name="variant_id[]" value="">
+        <input type="text" name="variant_size[]" class="form-control" value="${sizeVal}" placeholder="e.g. 8'X10', Runner" required>
+      </td>
+      <td>
+        <input type="text" name="variant_sku[]" class="form-control" value="${skuVal}" placeholder="Auto-generated if empty">
+      </td>
+      <td>
+        <input type="number" step="0.01" name="variant_price[]" class="form-control" value="${priceVal}" placeholder="e.g. 1850.00" required style="font-weight: 700; color: var(--gold-light);">
+      </td>
+      <td style="text-align: right;">
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeVariantRow(this, '')" title="Remove Size">
+          <i class="ri-delete-bin-line"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function addPresetRow(sizeVal, priceVal) {
+    addCustomSizeRow(sizeVal, priceVal);
+  }
+
+  function removeVariantRow(btn, variantId) {
+    if (variantId) {
+      const container = document.getElementById('deletedVariantsContainer');
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'deleted_variant_ids[]';
+      input.value = variantId;
+      container.appendChild(input);
+    }
+    const tr = btn.closest('tr');
+    tr.remove();
+  }
+
+  // Artisan Story & Care Instructions Preset Handlers
+  const storyPresets = {
+    heritage: "Handcrafted by generational master weavers in Rajasthan, India, this heirloom-quality rug unites centuries-old knotting artistry with contemporary interior elegance. Spun from pure natural fibers with meticulous knot-by-knot precision, each piece embodies the dedication, soulful craft, and human touch of over 40,000 artisan families.",
+    handknotted: "Individually hand-knotted over months by skilled artisans utilizing time-honored Tibetan and Persian knotting techniques. Every knot is tied by hand with high-twist yarn, producing an heirloom-grade foundation that grows softer and more luminous with every generation of living.",
+    callaluxe: "Engineered with AZI HOME's revolutionary CallaLuxe luxury fiber technology, this design harmonizes sumptuously soft tactile hand-feel with extraordinary spill resistance and high-traffic durability. Beautifully suited for discerning homes seeking sophisticated high-end aesthetics without compromising on everyday livability.",
+    silk: "Loomed from an exquisite blend of hand-spun Tibetan wool and luminescent pure silk highlights. Under shifting ambient illumination, the silk yarns impart an opulent, multi-dimensional luster and whisper-soft velvet feel underfoot, elevating grand living salons and master suites.",
+    jute: "Skillfully hand-braided and flat-woven from 100% natural organic jute and sustainably harvested plant fibers. Celebrating earthy organic texture, subtle color nuances, and grounding warmth, this eco-conscious piece infuses casual coastal sophistication into sunlit rooms and transitional spaces."
+  };
+
+  const carePresets = {
+    default: "Vacuum regularly on low-power suction-only setting without a rotating beater bar. Spot clean spills immediately by blotting with a clean, undyed cloth and mild pH-neutral soap. Professional hand immersion rug cleaning recommended every 3-5 years. Rug pad recommended to prevent slipping and extend fiber longevity.",
+    wool: "Vacuum regularly on low-power suction-only setting without a rotating beater bar. Spot clean spills immediately by blotting with a clean, undyed cloth and mild pH-neutral soap. Professional hand immersion rug cleaning recommended every 3-5 years. Rug pad recommended to prevent slipping and extend fiber longevity.",
+    callaluxe: "Effortless luxury maintenance: vacuum regularly with suction only. Bleach-cleanable for stubborn household stains—blot with a diluted mild soap solution or 10:1 water/bleach mist, rinse with clear damp cloth, and air dry. Highly resistant to fading, moisture, and high-traffic wear.",
+    silk: "Handle with specialized care: vacuum gently using handheld suction attachment without beater brushes. Do not scrub or saturate with water. Blot liquid spills immediately with dry, lint-free white cotton towels. Requires exclusive professional dry solvent cleaning by an oriental rug specialist."
+  };
+
+  function setStoryPreset(type) {
+    const textarea = document.getElementById('inputDescription');
+    if (textarea && storyPresets[type]) {
+      textarea.value = storyPresets[type];
+      textarea.classList.remove('pulse-glow');
+      void textarea.offsetWidth; // Trigger reflow to replay animation
+      textarea.classList.add('pulse-glow');
+    }
+  }
+
+  function setCarePreset(type) {
+    const textarea = document.getElementById('inputCareInstructions');
+    if (textarea && carePresets[type]) {
+      textarea.value = carePresets[type];
+      textarea.classList.remove('pulse-glow');
+      void textarea.offsetWidth; // Trigger reflow to replay animation
+      textarea.classList.add('pulse-glow');
+    }
+  }
+</script>
+{% endblock %}

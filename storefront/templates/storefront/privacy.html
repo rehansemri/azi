@@ -1,0 +1,139 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_content.meta_title|default:"Privacy Policy & Data Rights | AZI HOME" }}{% endblock %}
+
+{% block content %}
+<!-- HERO BANNER -->
+<section class="heritage-fullbleed-section" style="min-height: 380px;">
+  <img src="{{ page_content.hero_image|default:'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=85' }}" 
+       alt="{{ page_content.title|default:'Privacy Policy' }}" 
+       class="heritage-fullbleed-bg">
+  <div class="heritage-fullbleed-content">
+    <div class="heritage-fullbleed-eyebrow">{{ page_content.eyebrow|default:"TRANSPARENCY & DATA GOVERNANCE" }}</div>
+    <h1 class="heritage-fullbleed-title">{{ page_content.title|default:"Privacy Policy" }}</h1>
+    <p class="heritage-fullbleed-desc">
+      {{ page_content.subtitle|default:"Learn how AZI HOME safeguards, respects, and transparently manages your personal and trade data." }}
+    </p>
+  </div>
+</section>
+
+<!-- POLICY ARTICLE WRAPPER -->
+<div class="section-wrapper" style="max-width: 900px; padding-top: 60px; padding-bottom: 80px;">
+
+  <!-- LAST UPDATED TIMESTAMP -->
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 16px; margin-bottom: 40px;">
+    <span style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-accent-clay); font-weight: 700;">
+      Official Policy Document
+    </span>
+    <span style="font-size: 0.85rem; color: var(--color-text-muted);">
+      Last Updated: {{ page_content.updated_at|date:"F d, Y"|default:"October 2026" }}
+    </span>
+  </div>
+
+  <!-- HIGHLIGHT STATEMENT -->
+  {% if page_content.highlight_text %}
+    <div style="background: var(--color-bg-warm); border-left: 4px solid var(--color-accent-clay); padding: 24px 28px; border-radius: 4px; font-family: var(--font-editorial); font-size: 1.25rem; line-height: 1.6; color: var(--color-ink); font-style: italic; margin-bottom: 44px;">
+      {{ page_content.highlight_text }}
+    </div>
+  {% endif %}
+
+  <!-- EDITORIAL INTRO / BODY FROM CMS -->
+  {% if page_content.body %}
+    <div style="font-size: 1.05rem; line-height: 1.8; color: var(--color-text-main); margin-bottom: 40px; white-space: pre-line;">
+      {{ page_content.body }}
+    </div>
+  {% endif %}
+
+  <!-- STRUCTURED LEGAL SECTIONS -->
+  <div class="legal-policy-body" style="font-size: 0.96rem; line-height: 1.8; color: var(--color-text-main);">
+    
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      1. Information We Collect
+    </h3>
+    <p>
+      AZI HOME Inc. ("AZI HOME," "we," "us," or "our") collects information necessary to deliver exceptional rug design services, process sample swatches, verify trade discount credentials, and fulfill bespoke orders. We collect information when you:
+    </p>
+    <ul style="padding-left: 24px; margin-bottom: 20px;">
+      <li>Apply for a Trade Account, submitting designer resale certificates, company names, and billing records.</li>
+      <li>Purchase area rugs, swatches, or accessories through our online platform or showroom concierge.</li>
+      <li>Subscribe to our editorial newsletter, trend forecasts, or market showcase previews.</li>
+      <li>Interact with our digital platforms through browser cookies, IP logging, and session preferences.</li>
+    </ul>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      2. How We Use Your Information
+    </h3>
+    <p>
+      Your data is utilized strictly to provide tailored artisan rug solutions, specifically:
+    </p>
+    <ul style="padding-left: 24px; margin-bottom: 20px;">
+      <li>Fulfilling orders, calculating trade discounts, and scheduling white-glove freight delivery appointments.</li>
+      <li>Dispatching 18" swatches and managing the 100% credit program towards your final area rug purchase.</li>
+      <li>Sending transactional notices, shipment tracking updates, and warranty verification documents.</li>
+      <li>Enhancing website user experience, navigation fluidity, and high-resolution visual rendering performance.</li>
+    </ul>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      3. Non-Disclosure & Third-Party Protection
+    </h3>
+    <p>
+      <strong>We do not sell, rent, monetize, or lease your personal or project data to third-party data brokers or marketing aggregators.</strong>
+    </p>
+    <p>
+      Information is shared solely with trusted operational partners required to complete your transactions:
+    </p>
+    <ul style="padding-left: 24px; margin-bottom: 20px;">
+      <li>Accredited payment processors adhering to PCI-DSS Level 1 compliance.</li>
+      <li>Specialized freight and white-glove logistics carriers delivering oversized rugs to project sites.</li>
+      <li>Direct cloud infrastructure partners maintaining secure, encrypted server environments.</li>
+    </ul>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      4. Digital Security & Encryption Standards
+    </h3>
+    <p>
+      We employ industry-leading 256-bit Secure Socket Layer (SSL/TLS) encryption to protect all transmitted data. Sensitive payment credentials are tokenized and processed directly through certified financial institutions; complete credit card numbers are never stored on AZI HOME servers.
+    </p>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      5. Your Rights Under CCPA & GDPR
+    </h3>
+    <p>
+      Depending on your jurisdiction, you maintain specific rights regarding your personal records, including:
+    </p>
+    <ul style="padding-left: 24px; margin-bottom: 20px;">
+      <li><strong>The Right to Access:</strong> Request a comprehensive export of personal data currently associated with your account.</li>
+      <li><strong>The Right to Rectification:</strong> Update or correct outdated business credentials, billing addresses, or tax documents.</li>
+      <li><strong>The Right to Erasure ("Right to Be Forgotten"):</strong> Request complete deletion of personal records, subject to legal record-keeping obligations.</li>
+      <li><strong>Opt-Out of Communications:</strong> Unsubscribe from marketing communications at any time via the one-click link in any email.</li>
+    </ul>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.45rem; color: var(--color-ink); margin-top: 36px; margin-bottom: 12px;">
+      6. Contacting the Privacy Officer
+    </h3>
+    <p>
+      For questions, data access requests, or policy clarifications, please contact our Legal & Data Protection Office:
+    </p>
+    <div style="background: var(--color-bg-warm); padding: 20px 24px; border-radius: 6px; margin-top: 14px;">
+      <strong>AZI HOME Inc. — Privacy & Legal Affairs</strong><br>
+      Attn: Data Protection Officer<br>
+      6180 Atlantic Blvd, Suite L, Norcross, GA 30071<br>
+      Email: <a href="mailto:privacy@azi-home.com" style="color: var(--color-accent-clay); text-decoration: underline;">privacy@azi-home.com</a><br>
+      Phone: {{ settings.contact_phone|default:"+1 (800) 678-2478" }}
+    </div>
+
+  </div>
+
+  <!-- NAVIGATION FOOTER -->
+  <div style="text-align: center; border-top: 1px solid var(--color-border); padding-top: 40px; margin-top: 50px;">
+    <a href="{% url 'storefront:terms' %}" class="btn-luxury-outline">
+      View Terms & Conditions
+    </a>
+    <a href="{% url 'storefront:contact' %}" class="btn-luxury-dark" style="margin-left: 12px;">
+      Contact Privacy Officer
+    </a>
+  </div>
+
+</div>
+{% endblock %}

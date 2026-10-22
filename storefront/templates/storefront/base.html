@@ -1,0 +1,600 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5">
+  <title>{% block title %}{{ site_settings.site_name|default:"AZI HOME" }} | Shop Luxurious Handmade Rugs + Decor{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Foster inspiration with handmade rugs beautifully crafted by artisans around the world at AZI HOME (azi-home.com). Shop luxury rugs, pillows, poufs, and join our trade partner program.{% endblock %}">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="https://www.jaipurliving.com/static/version1792119810/frontend/Jaipur/default/en_US/images/jl_logo_white.svg">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body id="html-body">
+
+  <!-- Sitewide Announcement Bar (Dynamically Controlled via CMS) -->
+  {% if site_settings.announcement_active %}
+  <div class="top-announcement-bar" style="{% if site_settings.announcement_bg_color %}background-color: {{ site_settings.announcement_bg_color }};{% endif %}">
+    <span>{{ site_settings.announcement_text }}</span>
+    {% if site_settings.announcement_link_text %}
+      <a href="{{ site_settings.announcement_link_url|default:'#' }}">{{ site_settings.announcement_link_text }}</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Main Site Header -->
+  <header class="site-header" id="siteHeader">
+    <div class="header-container">
+      
+      <!-- Left: Mobile Menu & Desktop Navigation -->
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobileMenuToggleBtn" aria-label="Toggle Navigation">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <nav class="main-navigation" aria-label="Main Navigation">
+          <!-- Rugs Nav & Mega Menu -->
+          <!-- Rugs Nav & Mega Menu (6-Column Luxury AZI HOME Layout) -->
+          <div class="nav-item">
+            <a href="{% url 'storefront:rugs' %}" class="nav-link">Rugs</a>
+            <div class="mega-menu">
+              <div class="mega-menu-inner">
+                
+                <!-- Col 1: Featured (From MegaMenuItem Database Model) -->
+                {% if not mega_cols.featured or mega_cols.featured.is_visible %}
+                <div class="mega-col">
+                  <div class="mega-col-title">{{ mega_cols.featured.display_title|default:"Featured" }}</div>
+                  <ul class="mega-col-links">
+                    {% for item in mega_featured_links %}
+                      <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+                    {% endfor %}
+                  </ul>
+                  {% if mega_cols.featured.promo_banner_active and mega_cols.featured.promo_banner_image %}
+                    <div style="margin-top: 14px; border-radius: 6px; overflow: hidden;">
+                      <a href="{{ mega_cols.featured.promo_banner_link|default:'/rugs/' }}">
+                        <img src="{{ mega_cols.featured.promo_banner_image }}" alt="{{ mega_cols.featured.promo_banner_title }}" style="width: 100%; height: auto; border-radius: 6px;">
+                      </a>
+                    </div>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Col 2: Color (From Color Database Model) -->
+                {% if not mega_cols.color or mega_cols.color.is_visible %}
+                <div class="mega-col">
+                  <div class="mega-col-title">{{ mega_cols.color.display_title|default:"Color" }}</div>
+                  <ul class="mega-col-links">
+                    {% for c in nav_colors %}
+                      <li><a href="{% url 'storefront:rugs' %}?color={{ c.name }}">{{ c.name }}</a></li>
+                    {% endfor %}
+                    <li><a href="{% url 'storefront:rugs' %}">Shop All</a></li>
+                  </ul>
+                </div>
+                {% endif %}
+
+                <!-- Col 3: Material (From Material Database Model) -->
+                {% if not mega_cols.material or mega_cols.material.is_visible %}
+                <div class="mega-col">
+                  <div class="mega-col-title">{{ mega_cols.material.display_title|default:"Material" }}</div>
+                  <ul class="mega-col-links">
+                    {% for m in nav_materials %}
+                      <li><a href="{% url 'storefront:rugs' %}?material={{ m.name }}">{{ m.name }}</a></li>
+                    {% endfor %}
+                    <li><a href="{% url 'storefront:rugs' %}">Shop All</a></li>
+                  </ul>
+                </div>
+                {% endif %}
+
+                <!-- Col 4: Construction (From ConstructionType Database Model) -->
+                {% if not mega_cols.construction or mega_cols.construction.is_visible %}
+                <div class="mega-col">
+                  <div class="mega-col-title">{{ mega_cols.construction.display_title|default:"Construction" }}</div>
+                  <ul class="mega-col-links">
+                    {% for ct in nav_constructions %}
+                      <li><a href="{% url 'storefront:rugs' %}?construction={{ ct.name }}">{{ ct.name }}</a></li>
+                    {% endfor %}
+                    <li><a href="{% url 'storefront:rugs' %}">Shop All</a></li>
+                  </ul>
+                </div>
+                {% endif %}
+
+                <!-- Col 5: Custom & One of a kind (From MegaMenuItem Database Model) -->
+                {% if not mega_cols.custom or mega_cols.custom.is_visible %}
+                <div class="mega-col">
+                  <div class="mega-col-title">{{ mega_cols.custom.display_title|default:"Custom" }}</div>
+                  <ul class="mega-col-links">
+                    {% for item in mega_custom_links %}
+                      <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+                    {% endfor %}
+                  </ul>
+                  {% if mega_one_of_a_kind_links %}
+                    <div class="mega-col-subtitle">{{ mega_cols.custom.subtitle|default:"One of a kind" }}</div>
+                    <ul class="mega-col-links">
+                      {% for item in mega_one_of_a_kind_links %}
+                        <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Col 6: In stock now (From Size Database Model) -->
+                {% if not mega_cols.sizes or mega_cols.sizes.is_visible %}
+                <div class="mega-col">
+                  <div class="mega-col-title">{{ mega_cols.sizes.display_title|default:"In stock now" }}</div>
+                  <ul class="mega-col-links">
+                    {% for sz in nav_sizes %}
+                      <li><a href="{% url 'storefront:rugs' %}?size={{ sz.label }}">{{ sz.label }}</a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
+
+
+
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Decor Nav -->
+          <div class="nav-item">
+            <a href="{% url 'storefront:decor' %}" class="nav-link">Decor</a>
+            <div class="mega-menu">
+              <div class="mega-menu-inner" style="grid-template-columns: repeat(4, 1fr) 280px;">
+                <div class="mega-col">
+                  <div class="mega-col-title">Featured</div>
+                  <ul class="mega-col-links">
+                    <li><a href="{% url 'storefront:decor' %}">All Accessories</a></li>
+                    <li><a href="{% url 'storefront:decor' %}?q=pillow">Pillows</a></li>
+                    <li><a href="{% url 'storefront:decor' %}?q=pouf">Poufs</a></li>
+                    <li><a href="{% url 'storefront:decor' %}?q=throw">Throws</a></li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-col-title">Pillows</div>
+                  <ul class="mega-col-links">
+                    <li><a href="{% url 'storefront:decor' %}?q=wool">Wool Pillows</a></li>
+                    <li><a href="{% url 'storefront:decor' %}?q=outdoor">Indoor / Outdoor</a></li>
+                    <li><a href="{% url 'storefront:decor' %}?q=linen">Linen & Cotton</a></li>
+                    <li><a href="{% url 'storefront:decor' %}?q=solids">Textured Solids</a></li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-col-title">Poufs & Throws</div>
+                  <ul class="mega-col-links">
+                    <li><a href="{% url 'storefront:decor' %}?q=jute">100% Jute Poufs</a></li>
+                    <li><a href="{% url 'storefront:decor' %}?q=alpaca">Handmade Throws</a></li>
+                    <li><a href="{% url 'storefront:decor' %}?q=knitted">Hand Knitted Wool</a></li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-col-title">Services</div>
+                  <ul class="mega-col-links">
+                    <li><a href="#" class="trade-application-trigger">Sample Kits for Designers</a></li>
+                    <li><a href="#" class="trade-application-trigger">Custom Ring Sets</a></li>
+                  </ul>
+                </div>
+                <div class="mega-featured-card">
+                  <img src="https://www.jaipurliving.com/media/catalog/category/shop-all-meganav-july.jpg" alt="Accessories">
+                  <div class="mega-featured-title">SHOP ALL ACCESSORIES</div>
+                  <a href="{% url 'storefront:decor' %}" class="mega-featured-link">View Curated Accents →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inspiration Nav -->
+          <div class="nav-item">
+            <a href="{% url 'storefront:story' %}" class="nav-link">Inspiration</a>
+            <div class="mega-menu">
+              <div class="mega-menu-inner" style="grid-template-columns: repeat(3, 1fr) 300px;">
+                <div class="mega-col">
+                  <div class="mega-col-title">Design Edits</div>
+                  <ul class="mega-col-links">
+                    <li><a href="{% url 'storefront:rugs' %}?q=biophilic">Biophilic Design</a></li>
+                    <li><a href="{% url 'storefront:rugs' %}?q=mid-century">Mid-Century Modern</a></li>
+                    <li><a href="{% url 'storefront:rugs' %}?q=nordic">Nordic Origins</a></li>
+                    <li><a href="{% url 'storefront:rugs' %}?q=eclectic">Colorful Eclectic</a></li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-col-title">Artisan Heritage</div>
+                  <ul class="mega-col-links">
+                    <li><a href="{% url 'storefront:story' %}">The AZI HOME Story</a></li>
+                    <li><a href="{% url 'storefront:story' %}#artisans">Master Weavers of Bhadohi</a></li>
+                    <li><a href="{% url 'storefront:story' %}#foundation">Azi Home Foundation</a></li>
+                    <li><a href="{% url 'storefront:story' %}#craft">The Knotting Craft</a></li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-col-title">Resources</div>
+                  <ul class="mega-col-links">
+                    <li><a href="{% url 'storefront:trade' %}">Trade Designer Guide</a></li>
+                    <li><a href="{% url 'storefront:contract' %}">Hospitality & Contract</a></li>
+                    <li><a href="{% url 'storefront:story' %}">Care & Longevity</a></li>
+                  </ul>
+                </div>
+                <div class="mega-featured-card">
+                  <img src="https://www.jaipurliving.com/media/wysiwyg/2A5A3712-Weavers_1920x600_1.jpg" alt="Our Story">
+                  <div class="mega-featured-title">OUR STORY</div>
+                  <a href="{% url 'storefront:story' %}" class="mega-featured-link">Meet Our Artisans →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CallaLuxe Nav -->
+          <div class="nav-item">
+            <a href="{% url 'storefront:callaluxe' %}" class="nav-link" style="color: var(--color-accent-clay); font-weight: 700;">CallaLuxe</a>
+            <div class="mega-menu">
+              <div class="mega-menu-inner" style="grid-template-columns: 2fr 1fr 280px;">
+                <div class="mega-col">
+                  <div class="mega-col-title" style="color: var(--color-accent-clay);">LUXURY RUGS, MADE FOR REAL LIFE</div>
+                  <p style="font-size:0.88rem; color:var(--color-text-muted); line-height:1.6; margin-bottom:16px;">
+                    CallaLuxe by AZI HOME defines the new standard in luxury performance rugs. Crafted with solution-dyed acrylic fibers, color is infused at the fiber’s core so full saturation holds year after year.
+                  </p>
+                  <span style="font-size:0.75rem; letter-spacing:0.14em; text-transform:uppercase; font-weight:700; color:var(--color-accent-clay);">
+                    EXCLUSIVE TO AZI HOME
+                  </span>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-col-title">Collections</div>
+                  <ul class="mega-col-links">
+                    <li><a href="{% url 'storefront:callaluxe' %}">Canyon Textured Solids</a></li>
+                    <li><a href="{% url 'storefront:callaluxe' %}">Modern Architectural</a></li>
+                    <li><a href="{% url 'storefront:callaluxe' %}">Shop All CallaLuxe</a></li>
+                  </ul>
+                </div>
+                <div class="mega-featured-card">
+                  <img src="https://www.jaipurliving.com/media/catalog/category/CFL103_mm_feat.jpg" alt="CallaLuxe">
+                  <div class="mega-featured-title">SHOP CALLALUXE</div>
+                  <a href="{% url 'storefront:callaluxe' %}" class="mega-featured-link">Explore Collection →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </div>
+
+      <!-- Center: AZI HOME Wordmark / Custom Image Logo -->
+      <div class="header-center">
+        <a href="{% url 'storefront:index' %}" class="brand-logo" aria-label="{{ site_settings.site_name|default:'AZI HOME' }}">
+          {% if site_settings.header_logo_url %}
+            <img src="{{ site_settings.header_logo_url }}" alt="{{ site_settings.site_name|default:'AZI HOME' }}" style="max-height: 38px; width: auto; object-fit: contain;">
+          {% else %}
+            <span class="brand-wordmark">{{ site_settings.site_name|default:'AZI HOME' }}</span>
+            <span class="brand-submark">HANDMADE LUXURY</span>
+          {% endif %}
+        </a>
+      </div>
+
+      <!-- Right: Action Icons & Trade Portal -->
+      <div class="header-right">
+        <!-- Live Search Button -->
+        <button class="header-action-btn" id="searchToggleBtn" title="Search rugs and decor" aria-label="Search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+
+        <!-- Admin Dashboard Access -->
+        <a href="{% url 'storefront:dashboard_home' %}" class="header-action-btn admin-portal-btn" title="Power Admin Dashboard" style="display:inline-flex; align-items:center; gap:5px; background: rgba(201, 169, 130, 0.15); border: 1px solid rgba(201, 169, 130, 0.4); padding: 5px 11px; border-radius: 4px; font-size: 11px; font-weight: 700; color: #1F2735; letter-spacing: 0.5px; text-decoration: none;">
+          <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10B981;"></span>
+          ADMIN
+        </a>
+
+        <!-- Trade Partner Link -->
+        <a href="{% url 'storefront:trade' %}" class="header-action-btn trade-program-link trade-application-trigger">
+          Trade Program
+        </a>
+
+        <!-- Project List / Wishlist -->
+        <a href="{% url 'storefront:rugs' %}" class="header-action-btn" title="Project List (Wishlist)" aria-label="Project List">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span class="badge-count" id="wishlistCountBadge">{{ wishlist_count|default:0 }}</span>
+        </a>
+
+        <!-- Cart Bag -->
+        <button class="header-action-btn" id="cartDrawerOpenBtn" title="Shopping Bag" aria-label="Shopping Bag">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          <span class="badge-count" id="cartCountBadge">{{ cart_data.total_qty|default:0 }}</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Live Search Dropdown -->
+    <div class="search-bar-dropdown" id="searchDropdown">
+      <form action="{% url 'storefront:rugs' %}" method="GET" class="search-form-inner">
+        <span class="search-icon-inside">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="text" name="q" id="mainSearchInput" class="search-input-main" placeholder="Search by name, collection (e.g. Canyon, Majnun), material, or color...">
+        <div class="recent-searches-row">
+          <span>Popular searches:</span>
+          <a href="{% url 'storefront:rugs' %}?q=canyon" class="search-tag-chip">Canyon 01</a>
+          <a href="{% url 'storefront:callaluxe' %}" class="search-tag-chip">CallaLuxe</a>
+          <a href="{% url 'storefront:rugs' %}?q=majnun" class="search-tag-chip">Majnun</a>
+          <a href="{% url 'storefront:rugs' %}?q=wool" class="search-tag-chip">Hand Knotted Wool</a>
+          <a href="{% url 'storefront:rugs' %}?q=8x10" class="search-tag-chip">8'X10'</a>
+        </div>
+      </form>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Drawer -->
+  <div class="cart-drawer-overlay" id="mobileNavDrawer">
+    <div class="cart-drawer" style="left:0; right:auto; transform:translateX(-100%);" id="mobileNavDrawerContent">
+      <div class="cart-drawer-header">
+        <span class="brand-wordmark" style="font-size:1.2rem;">AZI HOME</span>
+        <button class="cart-drawer-close" id="mobileDrawerCloseBtn">&times;</button>
+      </div>
+      <div style="padding: 24px;">
+        <ul style="display:flex; flex-direction:column; gap:20px; font-size:1.1rem; text-transform:uppercase; letter-spacing:0.1em;">
+          <li><a href="{% url 'storefront:rugs' %}">Rugs</a></li>
+          <li><a href="{% url 'storefront:decor' %}">Decor</a></li>
+          <li><a href="{% url 'storefront:callaluxe' %}">CallaLuxe</a></li>
+          <li><a href="{% url 'storefront:story' %}">Inspiration & Story</a></li>
+          <li><a href="{% url 'storefront:contract' %}">Contract Rugs</a></li>
+          <li><a href="{% url 'storefront:trade' %}" class="trade-application-trigger" style="color:var(--color-accent-clay); font-weight:700;">Trade Program</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Block -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Bottom Partner Callout -->
+  <section class="bottom-partner-block">
+    <div class="bottom-partner-inner">
+      <h3 class="bottom-partner-title">Become a Partner</h3>
+      <p class="bottom-partner-desc">
+        Sign up to place orders and see trade pricing. Not a trade professional? Our design concierge will guide you to a showroom or retail partner.
+      </p>
+      <a href="#" class="btn-luxury-dark trade-application-trigger">Apply Now for Trade Account</a>
+    </div>
+  </section>
+
+  <!-- Luxury Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-top-grid">
+        
+        <!-- Brand Col -->
+        <div class="footer-brand-col">
+          <div class="brand-wordmark">{{ site_settings.site_name|default:'AZI HOME' }}</div>
+          <p>
+            Redefining rug making since 1978. Every piece is a reflection of heritage, care, and craftsmanship passed down through generations of master artisans.
+          </p>
+          <div class="footer-social-links" style="display: flex; gap: 12px; margin-top: 14px;">
+            {% if site_settings.instagram_url %}
+              <a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener" style="color: var(--color-gold); font-size: 1.1rem;" title="Instagram">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+              </a>
+            {% endif %}
+            {% if site_settings.pinterest_url %}
+              <a href="{{ site_settings.pinterest_url }}" target="_blank" rel="noopener" style="color: var(--color-gold); font-size: 1.1rem;" title="Pinterest">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="4" x2="12" y2="20"></line><path d="M8 8a4 4 0 0 1 8 0c0 3-2 6-4 9"></path></svg>
+              </a>
+            {% endif %}
+            {% if site_settings.linkedin_url %}
+              <a href="{{ site_settings.linkedin_url }}" target="_blank" rel="noopener" style="color: var(--color-gold); font-size: 1.1rem;" title="LinkedIn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+              </a>
+            {% endif %}
+            {% if site_settings.youtube_url %}
+              <a href="{{ site_settings.youtube_url }}" target="_blank" rel="noopener" style="color: var(--color-gold); font-size: 1.1rem;" title="YouTube">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Col 1: About -->
+        <div>
+          <div class="footer-col-title">About Us</div>
+          <ul class="footer-links">
+            <li><a href="{% url 'storefront:story' %}">Our Story</a></li>
+            <li><a href="{% url 'storefront:story' %}#artisans">Artisans of Bhadohi</a></li>
+            <li><a href="{% url 'storefront:story' %}#craft">The Craft of Knotting</a></li>
+            <li><a href="{% url 'storefront:story' %}#foundation">Azi Home Foundation</a></li>
+            <li><a href="{% url 'storefront:contract' %}">Careers & Press</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 2: Shop -->
+        <div>
+          <div class="footer-col-title">Shop</div>
+          <ul class="footer-links">
+            <li><a href="{% url 'storefront:rugs' %}">All Rugs</a></li>
+            <li><a href="{% url 'storefront:callaluxe' %}">CallaLuxe Performance</a></li>
+            <li><a href="{% url 'storefront:decor' %}">Accessories & Decor</a></li>
+            <li><a href="{% url 'storefront:rugs' %}?collection=bestsellers">Best Sellers</a></li>
+            <li><a href="{% url 'storefront:trade' %}">Swatches & Ring Sets</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Resources -->
+        <div>
+          <div class="footer-col-title">Resources</div>
+          <ul class="footer-links">
+            <li><a href="{% url 'storefront:trade' %}">Trade Benefits</a></li>
+            <li><a href="{% url 'storefront:story' %}">Rugs 101 Guide</a></li>
+            <li><a href="{% url 'storefront:story' %}">Care & Cleaning</a></li>
+            <li><a href="{% url 'storefront:callaluxe' %}">Stain Resistant Shield</a></li>
+            <li><a href="{% url 'storefront:contract' %}">Contract Hospitality</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Contact & Care -->
+        <div>
+          <div class="footer-col-title">Client Care & Concierge</div>
+          <ul class="footer-links">
+            <li><a href="{% url 'storefront:contact' %}">Contact Us & Showrooms</a></li>
+            <li><a href="{% url 'storefront:customer_service' %}">Customer Service & FAQ</a></li>
+            <li><a href="{% url 'storefront:refund' %}">Returns & Swatch Exchanges</a></li>
+            <li><a href="{% url 'storefront:contract' %}">Contract Hospitality</a></li>
+            <li><a href="tel:{{ site_settings.contact_phone|default:'+18886767330' }}">{{ site_settings.contact_phone|default:'+1 (888) 676-7330' }}</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 5: Newsletter -->
+        <div>
+          <div class="footer-col-title">Connect & Inspire</div>
+          <p style="font-size:0.82rem; color:var(--color-text-muted); line-height:1.5;">
+            Join our mailing list to receive exclusive design previews, new release previews, and trade announcements.
+          </p>
+          <form class="newsletter-form" id="newsletterSubscribeForm">
+            <div class="newsletter-input-group">
+              <input type="email" name="email" class="newsletter-input" placeholder="Your email address *" required>
+              <button type="submit" class="newsletter-submit-btn">Subscribe</button>
+            </div>
+            <div class="newsletter-feedback" id="newsletterFeedback"></div>
+          </form>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          {{ site_settings.footer_copyright_text|default:'© 2026 AZI HOME Inc. All rights reserved. Master Weavers of Bhadohi.' }}
+        </div>
+        <div class="footer-legal-links">
+          <a href="{% url 'storefront:terms' %}">Terms & Conditions</a>
+          <a href="{% url 'storefront:privacy' %}">Privacy Policy</a>
+          <a href="{% url 'storefront:refund' %}">Refund & Return Policy</a>
+          <a href="{% url 'storefront:customer_service' %}">Customer Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Slide-Out Drawer -->
+  <div class="cart-drawer-overlay" id="cartDrawerOverlay"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h3 class="cart-drawer-title">Shopping Bag</h3>
+      <button class="cart-drawer-close" id="cartDrawerCloseBtn">&times;</button>
+    </div>
+
+    <!-- Free Shipping Progress -->
+    <div class="free-shipping-progress-wrap">
+      <div class="shipping-bar-text" id="freeShippingBarText">
+        Add <strong>$500.00</strong> more to unlock Free White-Glove Shipping
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="freeShippingProgressBar"></div>
+      </div>
+    </div>
+
+    <!-- Cart Items List -->
+    <div class="cart-items-list" id="cartItemsList">
+      <div class="cart-empty-message">
+        <p>Your bag is currently empty.</p>
+        <a href="{% url 'storefront:rugs' %}" class="btn-luxury-primary" style="margin-top:16px;">Explore Rugs</a>
+      </div>
+    </div>
+
+    <!-- Cart Footer -->
+    <div class="cart-drawer-footer">
+      <div class="cart-subtotal-row">
+        <span>Subtotal</span>
+        <span id="cartSubtotalAmount">$0.00</span>
+      </div>
+      <button class="cart-checkout-btn" onclick="alert('Proceeding to AZI HOME Secure Trade Checkout...')">
+        Proceed to Checkout
+      </button>
+    </div>
+  </div>
+
+  <!-- Quick View Product Modal Removed (Cards navigate directly to Product Detail Page) -->
+
+  <!-- Trade Application Modal -->
+  <div class="modal-overlay" id="tradeApplicationModal">
+    <div class="trade-modal-card">
+      <button class="modal-close-btn" id="tradeModalCloseBtn">&times;</button>
+      <h3 class="trade-modal-title">Open a Trade Account</h3>
+      <p class="trade-modal-sub">
+        Join over 15,000 interior designers, architects, and hospitality leaders with exclusive pricing, sample kits, and dedicated support.
+      </p>
+
+      <form id="tradeApplicationForm">
+        <div class="form-grid-2col">
+          <div class="form-field">
+            <label for="tfFirstName">First Name *</label>
+            <input type="text" id="tfFirstName" name="first_name" class="form-input" required placeholder="Jane">
+          </div>
+          <div class="form-field">
+            <label for="tfLastName">Last Name *</label>
+            <input type="text" id="tfLastName" name="last_name" class="form-input" required placeholder="Doe">
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-field">
+            <label for="tfCompany">Company / Studio *</label>
+            <input type="text" id="tfCompany" name="company" class="form-input" required placeholder="Studio Interiors">
+          </div>
+          <div class="form-field">
+            <label for="tfBusinessType">Business Type</label>
+            <select id="tfBusinessType" name="business_type" class="form-select">
+              <option value="Interior Designer">Interior Designer</option>
+              <option value="Architect">Architectural Firm</option>
+              <option value="Hospitality Specifier">Hospitality / Commercial</option>
+              <option value="Retailer">High-End Retailer</option>
+              <option value="Stager">Home Stager</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2col">
+          <div class="form-field">
+            <label for="tfEmail">Professional Email *</label>
+            <input type="email" id="tfEmail" name="email" class="form-input" required placeholder="jane@studiointeriors.com">
+          </div>
+          <div class="form-field">
+            <label for="tfPhone">Phone Number</label>
+            <input type="tel" id="tfPhone" name="phone" class="form-input" placeholder="+1 (555) 000-0000">
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="tfWebsite">Portfolio / Website</label>
+          <input type="url" id="tfWebsite" name="website" class="form-input" placeholder="https://www.studiointeriors.com">
+        </div>
+
+        <div class="form-field">
+          <label for="tfNotes">Current Projects or Sample Kit Requests</label>
+          <textarea id="tfNotes" name="notes" class="form-textarea" rows="3" placeholder="Tell us about your upcoming project or requested swatches..."></textarea>
+        </div>
+
+        <button type="submit" class="form-submit-btn">Submit Trade Application</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,258 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block page_subtitle %}Real-time store catalog metrics, trade applications, and quick database actions{% endblock %}
+
+{% block content %}
+
+<!-- METRICS ROW -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-header">
+      <span class="metric-label">Total Products</span>
+      <div class="metric-icon"><i class="ri-archive-line"></i></div>
+    </div>
+    <div class="metric-value">{{ total_products }}</div>
+    <div class="metric-sub">{{ collections_count }} distinct curated collections</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <span class="metric-label">Product Variants</span>
+      <div class="metric-icon"><i class="ri-shape-line"></i></div>
+    </div>
+    <div class="metric-value">{{ total_variants }}</div>
+    <div class="metric-sub">Dynamic size & pricing options</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <span class="metric-label">In-Stock Availability</span>
+      <div class="metric-icon"><i class="ri-check-double-line"></i></div>
+    </div>
+    <div class="metric-value">{{ in_stock_pct }}%</div>
+    <div class="metric-sub">Ready-to-ship luxury inventory</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <span class="metric-label">Trade Applications</span>
+      <div class="metric-icon"><i class="ri-vip-crown-line"></i></div>
+    </div>
+    <div class="metric-value">{{ total_trade_apps }}</div>
+    <div class="metric-sub">
+      {% if pending_trade_apps %}
+        <span style="color: #F87171; font-weight: 600;">{{ pending_trade_apps }} pending approvals</span>
+      {% else %}
+        <span style="color: #34D399;">All reviewed</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <span class="metric-label">Newsletter Subscribers</span>
+      <div class="metric-icon"><i class="ri-mail-star-line"></i></div>
+    </div>
+    <div class="metric-value">{{ total_subscribers }}</div>
+    <div class="metric-sub">Direct collector audience</div>
+  </div>
+</div>
+
+<!-- QUICK ACTION HERO BANNER -->
+<div class="panel" style="background: linear-gradient(135deg, rgba(201, 169, 130, 0.12), rgba(18, 24, 36, 0.95)); border-color: rgba(201, 169, 130, 0.25);">
+  <div class="panel-body" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+    <div>
+      <span class="badge badge-gold" style="margin-bottom: 8px;">LIVE CMS ACTIVE</span>
+      <h3 style="font-family: var(--font-heading); font-size: 24px; color: #FFF; margin-bottom: 4px;">Control Everything on the Live Storefront</h3>
+      <p style="color: var(--text-muted); font-size: 13.5px; max-width: 600px;">
+        Modify live announcement banners, homepage video & headlines, add new rug collections, customize prices per size, and manage trade accounts without touching code.
+      </p>
+    </div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <a href="{% url 'storefront:dashboard_cms' %}" class="btn btn-gold">
+        <i class="ri-layout-masonry-line"></i> Edit Live Page Content
+      </a>
+      <a href="{% url 'storefront:dashboard_product_create' %}" class="btn btn-secondary">
+        <i class="ri-add-line"></i> Add New Rug
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 2 COLUMN LAYOUT: RECENT PRODUCTS & TRADE APPS -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 28px;">
+  
+  <!-- RECENT PRODUCTS -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="ri-archive-line" style="color: var(--gold-primary);"></i>
+        <span>Catalog Products</span>
+      </div>
+      <a href="{% url 'storefront:dashboard_products' %}" class="btn btn-secondary btn-sm">View All ({{ total_products }})</a>
+    </div>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 50px;">Rug</th>
+            <th>Name & Code</th>
+            <th>Collection</th>
+            <th>Starting At</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in recent_products %}
+            <tr>
+              <td>
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="thumb-cell">
+              </td>
+              <td>
+                <div style="font-weight: 600; color: #FFF;">{{ product.name }}</div>
+                <div style="font-size: 11px; color: var(--gold-light);">{{ product.catalog_code }}</div>
+              </td>
+              <td>
+                <span class="badge badge-secondary">{{ product.collection }}</span>
+              </td>
+              <td style="font-weight: 600; color: var(--gold-light);">
+                ${{ product.price_from }}
+              </td>
+              <td style="text-align: right;">
+                <div style="display: inline-flex; gap: 6px;">
+                  <a href="{% url 'storefront:dashboard_product_variants' product.id %}" class="btn btn-secondary btn-sm" title="Manage Sizes & Prices">
+                    <i class="ri-price-tag-3-line"></i> Sizes
+                  </a>
+                  <a href="{% url 'storefront:dashboard_product_edit' product.id %}" class="btn btn-secondary btn-sm" title="Edit Product">
+                    <i class="ri-edit-line"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                No products found. Click "Add New Product" to get started!
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RECENT TRADE APPLICATIONS -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="ri-vip-crown-line" style="color: var(--gold-primary);"></i>
+        <span>Trade & Designer Applications</span>
+      </div>
+      <a href="{% url 'storefront:dashboard_trade_apps' %}" class="btn btn-secondary btn-sm">Manage All</a>
+    </div>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Applicant</th>
+            <th>Company</th>
+            <th>Status</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in recent_trade_apps %}
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: #FFF;">{{ app.first_name }} {{ app.last_name }}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">{{ app.email }}</div>
+              </td>
+              <td>
+                <div style="color: var(--text-main);">{{ app.company }}</div>
+                <div style="font-size: 11px; color: var(--text-dim);">{{ app.business_type|default:"Interior Designer" }}</div>
+              </td>
+              <td>
+                {% if app.approved %}
+                  <span class="badge badge-success"><i class="ri-check-line"></i> Approved</span>
+                {% else %}
+                  <span class="badge badge-warning"><i class="ri-time-line"></i> Pending</span>
+                {% endif %}
+              </td>
+              <td style="text-align: right;">
+                <form method="POST" action="{% url 'storefront:dashboard_trade_toggle_approve' app.id %}" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary btn-sm">
+                    {% if app.approved %}Revoke{% else %}Approve{% endif %}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                No trade applications received yet.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- CMS LIVE PREVIEW SUMMARY -->
+<div class="panel" style="margin-top: 10px;">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="ri-broadcast-line" style="color: var(--gold-primary);"></i>
+      <span>Current Live Website Content Settings</span>
+    </div>
+    <a href="{% url 'storefront:dashboard_cms' %}" class="btn btn-gold btn-sm">
+      <i class="ri-edit-2-line"></i> Edit in CMS
+    </a>
+  </div>
+  <div class="panel-body">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px;">
+          Top Announcement Banner
+        </div>
+        <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px;">
+          {% if site_settings.announcement_active %}
+            <span class="badge badge-success" style="margin-bottom: 6px;">ACTIVE</span><br>
+            <strong>"{{ site_settings.announcement_text }}"</strong><br>
+            <span style="color: var(--gold-light);">Link: {{ site_settings.announcement_link_text }} &rarr; {{ site_settings.announcement_link_url }}</span>
+          {% else %}
+            <span class="badge badge-secondary">HIDDEN</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px;">
+          Homepage Hero Headline
+        </div>
+        <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px;">
+          <div style="color: var(--gold-light); font-size: 11px; text-transform: uppercase;">{{ site_settings.hero_eyebrow }}</div>
+          <div style="font-family: var(--font-heading); font-size: 18px; color: #FFF; font-weight: 600;">{{ site_settings.hero_title }}</div>
+          <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">{{ site_settings.hero_subtitle }}</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px;">
+          Showroom & Concierge Contact
+        </div>
+        <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px;">
+          <div><i class="ri-phone-line" style="color: var(--gold-primary);"></i> {{ site_settings.contact_phone }}</div>
+          <div><i class="ri-mail-line" style="color: var(--gold-primary);"></i> {{ site_settings.contact_email }}</div>
+          <div style="color: var(--text-dim); font-size: 11px; margin-top: 4px;">{{ site_settings.showroom_address }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

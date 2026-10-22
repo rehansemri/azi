@@ -1,0 +1,276 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} | AZI HOME{% endblock %}
+
+{% block content %}
+<div class="section-wrapper" style="padding-top:40px; padding-bottom:80px;">
+  
+  <!-- Breadcrumb -->
+  <div style="font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-light); margin-bottom:24px;">
+    <a href="{% url 'storefront:index' %}">Home</a> / 
+    <a href="{% url 'storefront:rugs' %}">Rugs</a>
+    {% if is_new_page %}
+      / <span style="color:var(--color-ink); font-weight:600;">New Arrivals</span>
+    {% elif selected_collections %}
+      / <span style="color:var(--color-ink); font-weight:600;">{{ selected_collections.0 }}</span>
+    {% endif %}
+  </div>
+
+  <!-- Page Header -->
+  <div style="margin-bottom:28px;">
+    <h1 style="font-family:var(--font-serif); font-size:2.4rem; font-weight:400; color:var(--color-ink); margin-bottom:6px;">
+      {% if not is_new_page and not selected_collections and page_content.title %}{{ page_content.title }}{% else %}{{ page_title }}{% endif %}
+    </h1>
+    <p style="color:var(--color-text-muted); font-size:0.9rem;">
+      {% if not is_new_page and not selected_collections and page_content.subtitle %}{{ page_content.subtitle }}{% else %}{{ page_subtitle }}{% endif %} — <strong>{{ total_count }}</strong> handmade pieces found
+      {% if search_query %} matching "{{ search_query }}"{% endif %}
+    </p>
+  </div>
+
+  <!-- Top Utility Bar: Active Pills & Sort -->
+  <div class="catalog-top-bar">
+    
+    <!-- Active Filter Badges -->
+    <div class="active-pills-row">
+      {% if active_filter_pills %}
+        <span style="font-size:0.75rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--color-text-light); margin-right:4px;">Active Filters:</span>
+        {% for pill in active_filter_pills %}
+          <div class="filter-pill" onclick="removeActiveFilter('{{ pill.type }}', '{{ pill.val }}')">
+            <span>{{ pill.label }}</span>
+            <span class="filter-pill-remove">&times;</span>
+          </div>
+        {% endfor %}
+        <a href="{% if is_new_page %}{% url 'storefront:rugs_new_html' %}{% else %}{% url 'storefront:rugs' %}{% endif %}" class="filter-clear-all-btn" style="margin-left:8px;">Clear All</a>
+      {% else %}
+        <span style="font-size:0.8rem; color:var(--color-text-muted);">Use the filters below to refine by collection, size, technique, or fiber.</span>
+      {% endif %}
+    </div>
+
+    <!-- Sort Dropdown -->
+    <div class="sort-select-wrap">
+      <label for="catalogSortSelect">Sort By:</label>
+      <select id="catalogSortSelect" class="sort-dropdown" onchange="applySorting(this.value)">
+        <option value="featured" {% if current_sort == 'featured' %}selected{% endif %}>Featured</option>
+        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest Arrivals</option>
+        <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+        <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+        <option value="name_asc" {% if current_sort == 'name_asc' %}selected{% endif %}>Product Name: A to Z</option>
+        <option value="name_desc" {% if current_sort == 'name_desc' %}selected{% endif %}>Product Name: Z to A</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- Main Catalog Layout (Sidebar + Grid) -->
+  <div class="catalog-layout">
+    
+    <!-- Filter Sidebar (Dynamic Database Facets) -->
+    <form id="catalogFilterForm" method="GET" action="{% if is_new_page %}{% url 'storefront:rugs_new_html' %}{% else %}{% url 'storefront:rugs' %}{% endif %}" class="filter-sidebar">
+      
+      <!-- Preserve sort & search -->
+      <input type="hidden" name="sort" id="formSortField" value="{{ current_sort }}">
+      {% if search_query %}
+        <input type="hidden" name="q" value="{{ search_query }}">
+      {% endif %}
+
+      <div class="filter-sidebar-header">
+        <span class="filter-sidebar-title">Filters</span>
+        {% if active_filter_pills %}
+          <a href="{% if is_new_page %}{% url 'storefront:rugs_new_html' %}{% else %}{% url 'storefront:rugs' %}{% endif %}" class="filter-clear-all-btn">Reset All</a>
+        {% endif %}
+      </div>
+
+      <!-- 1. COLLECTION FILTER (From Database) -->
+      <div class="filter-facet-group">
+        <button type="button" class="filter-facet-header" onclick="toggleFacetSection(this)">
+          <span>Collection</span>
+          <span class="filter-facet-icon">−</span>
+        </button>
+        <div class="filter-facet-content">
+          {% for coll in all_collections %}
+            <div class="filter-facet-item">
+              <label class="filter-facet-label">
+                <input type="checkbox" name="collection" value="{{ coll.collection }}" 
+                       {% if coll.collection in selected_collections %}checked{% endif %}
+                       onchange="this.form.submit()">
+                <span>{{ coll.collection }}</span>
+              </label>
+              <span class="filter-facet-count">({{ coll.total }})</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- 2. CONSTRUCTION FILTER (From Database) -->
+      <div class="filter-facet-group">
+        <button type="button" class="filter-facet-header" onclick="toggleFacetSection(this)">
+          <span>Construction</span>
+          <span class="filter-facet-icon">−</span>
+        </button>
+        <div class="filter-facet-content">
+          {% for const in all_constructions %}
+            <div class="filter-facet-item">
+              <label class="filter-facet-label">
+                <input type="checkbox" name="construction" value="{{ const.construction }}" 
+                       {% if const.construction in selected_constructions %}checked{% endif %}
+                       onchange="this.form.submit()">
+                <span>{{ const.construction }}</span>
+              </label>
+              <span class="filter-facet-count">({{ const.total }})</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- 3. MATERIAL FILTER (From Database) -->
+      <div class="filter-facet-group">
+        <button type="button" class="filter-facet-header" onclick="toggleFacetSection(this)">
+          <span>Material / Fiber</span>
+          <span class="filter-facet-icon">−</span>
+        </button>
+        <div class="filter-facet-content">
+          {% for mat in all_materials %}
+            <div class="filter-facet-item">
+              <label class="filter-facet-label">
+                <input type="checkbox" name="material" value="{{ mat.material }}" 
+                       {% if mat.material in selected_materials %}checked{% endif %}
+                       onchange="this.form.submit()">
+                <span>{{ mat.material }}</span>
+              </label>
+              <span class="filter-facet-count">({{ mat.total }})</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- 4. SIZE FILTER (From Database) -->
+      <div class="filter-facet-group">
+        <button type="button" class="filter-facet-header" onclick="toggleFacetSection(this)">
+          <span>In Stock Sizes</span>
+          <span class="filter-facet-icon">−</span>
+        </button>
+        <div class="filter-facet-content">
+          {% for sz in all_sizes %}
+            <div class="filter-facet-item">
+              <label class="filter-facet-label">
+                <input type="checkbox" name="size" value="{{ sz.size }}" 
+                       {% if sz.size in selected_sizes %}checked{% endif %}
+                       onchange="this.form.submit()">
+                <span>{{ sz.size }}</span>
+              </label>
+              <span class="filter-facet-count">({{ sz.total }})</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- 5. PRICE RANGE FILTER (From Database) -->
+      <div class="filter-facet-group">
+        <button type="button" class="filter-facet-header" onclick="toggleFacetSection(this)">
+          <span>Price Range</span>
+          <span class="filter-facet-icon">−</span>
+        </button>
+        <div class="filter-facet-content">
+          {% for tier in price_tiers %}
+            <div class="filter-facet-item">
+              <label class="filter-facet-label">
+                <input type="checkbox" name="price" value="{{ tier.id }}" 
+                       {% if tier.id in selected_prices %}checked{% endif %}
+                       onchange="this.form.submit()">
+                <span>{{ tier.label }}</span>
+              </label>
+              <span class="filter-facet-count">({{ tier.count }})</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- 6. AVAILABILITY -->
+      <div class="filter-facet-group" style="border-bottom:none;">
+        <div class="filter-facet-item" style="padding-top:4px;">
+          <label class="filter-facet-label">
+            <input type="checkbox" name="in_stock" value="1" 
+                   {% if in_stock_only %}checked{% endif %}
+                   onchange="this.form.submit()">
+            <span style="font-weight:600;">In Stock Only</span>
+          </label>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Right Side: Products Grid -->
+    <div>
+      {% if products %}
+        <div class="product-grid-4col" style="grid-template-columns: repeat(3, 1fr);">
+          {% for product in products %}
+            <div class="product-card" onclick="if(!event.target.closest('.wishlist-btn')) window.location.href='{% url 'storefront:product_detail' product.slug %}'">
+              <div class="product-card-img-wrap">
+                <a href="{% url 'storefront:product_detail' product.slug %}">
+                  <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+                </a>
+                {% if product.badge %}
+                  <span class="product-badge">{{ product.badge }}</span>
+                {% elif product.construction == 'Hand Knotted' %}
+                  <span class="product-badge" style="background:#1f1f1f; color:#fff;">Hand Knotted</span>
+                {% endif %}
+                <button class="wishlist-btn" title="Add to Project List" onclick="event.stopPropagation(); toggleWishlist(this, {{ product.id }})">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="product-card-info">
+                <span class="product-card-collection">{{ product.collection }}</span>
+                <a href="{% url 'storefront:product_detail' product.slug %}" class="product-card-name">{{ product.name }}</a>
+                <span class="product-card-meta">{{ product.construction }} • {{ product.material }}</span>
+                <div class="product-card-price">From ${{ product.price_from|floatformat:2 }}</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="background:#faf9f7; border:1px solid var(--color-border); padding:64px 32px; text-align:center; border-radius:4px;">
+          <h3 style="font-family:var(--font-serif); font-size:1.6rem; color:var(--color-ink); margin-bottom:10px;">No rugs matched your current filter selection.</h3>
+          <p style="color:var(--color-text-muted); font-size:0.9rem; margin-bottom:24px;">Try deselecting some facets or resetting all filters to browse our complete collection.</p>
+          <a href="{% if is_new_page %}{% url 'storefront:rugs_new_html' %}{% else %}{% url 'storefront:rugs' %}{% endif %}" class="btn-luxury-dark" style="display:inline-block; padding:12px 28px;">Reset All Filters</a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Client Filter Scripts -->
+<script>
+  function toggleFacetSection(headerBtn) {
+    const content = headerBtn.nextElementSibling;
+    const icon = headerBtn.querySelector('.filter-facet-icon');
+    if (content.style.display === 'none') {
+      content.style.display = 'flex';
+      icon.textContent = '−';
+    } else {
+      content.style.display = 'none';
+      icon.textContent = '+';
+    }
+  }
+
+  function applySorting(sortVal) {
+    document.getElementById('formSortField').value = sortVal;
+    document.getElementById('catalogFilterForm').submit();
+  }
+
+  function removeActiveFilter(type, val) {
+    const form = document.getElementById('catalogFilterForm');
+    const inputs = form.querySelectorAll(`input[name="${type}"]`);
+    inputs.forEach(inp => {
+      if (inp.value === val) {
+        inp.checked = false;
+      }
+    });
+    form.submit();
+  }
+</script>
+{% endblock %}

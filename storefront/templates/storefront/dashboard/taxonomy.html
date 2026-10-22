@@ -1,0 +1,1699 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Rug Taxonomy & Mega-Menu Attributes Master{% endblock %}
+{% block page_subtitle %}Manage dedicated database models for Colors, Materials, Constructions, Features, Sizes, Columns, Collections, and Categories{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'storefront:dashboard_product_create' %}" class="btn btn-gold">
+    <i class="ri-add-line"></i> Create New Rug
+  </a>
+  <a href="/admin/" target="_blank" class="btn btn-secondary">
+    <i class="ri-shield-keyhole-line"></i> Django Core Admin
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- METRICS SUMMARY -->
+<div class="metrics-grid">
+  <div class="metric-card" onclick="switchTaxTab('color')" style="cursor: pointer;">
+    <div class="metric-header">
+      <span class="metric-label">Colors Model</span>
+      <div class="metric-icon"><i class="ri-palette-line"></i></div>
+    </div>
+    <div class="metric-value">{{ colors|length }}</div>
+    <div class="metric-sub">Curated pigment families</div>
+  </div>
+
+  <div class="metric-card" onclick="switchTaxTab('material')" style="cursor: pointer;">
+    <div class="metric-header">
+      <span class="metric-label">Materials Model</span>
+      <div class="metric-icon"><i class="ri-leaf-line"></i></div>
+    </div>
+    <div class="metric-value">{{ materials|length }}</div>
+    <div class="metric-sub">Wool, silk, CallaLuxe & jute</div>
+  </div>
+
+  <div class="metric-card" onclick="switchTaxTab('construction')" style="cursor: pointer;">
+    <div class="metric-header">
+      <span class="metric-label">Constructions Model</span>
+      <div class="metric-icon"><i class="ri-hammer-line"></i></div>
+    </div>
+    <div class="metric-value">{{ constructions|length }}</div>
+    <div class="metric-sub">Knotted, tufted & flatweave</div>
+  </div>
+
+  <div class="metric-card" onclick="switchTaxTab('feature')" style="cursor: pointer;">
+    <div class="metric-header">
+      <span class="metric-label">Features Model</span>
+      <div class="metric-icon"><i class="ri-shield-star-line"></i></div>
+    </div>
+    <div class="metric-value">{{ features|length }}</div>
+    <div class="metric-sub">Performance, washable, outdoor</div>
+  </div>
+
+  <div class="metric-card" onclick="switchTaxTab('size')" style="cursor: pointer;">
+    <div class="metric-header">
+      <span class="metric-label">Sizes Model</span>
+      <div class="metric-icon"><i class="ri-ruler-2-line"></i></div>
+    </div>
+    <div class="metric-value">{{ sizes|length }}</div>
+    <div class="metric-sub">Standard area & runner sizes</div>
+  </div>
+
+  <div class="metric-card" onclick="switchTaxTab('collection')" style="cursor: pointer;">
+    <div class="metric-header">
+      <span class="metric-label">Rug Collections</span>
+      <div class="metric-icon"><i class="ri-grid-line"></i></div>
+    </div>
+    <div class="metric-value">{{ collections|length }}</div>
+    <div class="metric-sub">Designer series & lines</div>
+  </div>
+</div>
+
+<!-- SUB-NAVIGATION TABS -->
+<div class="dashboard-tabs" style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px;">
+  <button type="button" class="tab-btn {% if subtab == 'overview' or not subtab %}active{% endif %}" onclick="switchTaxTab('overview')">
+    <i class="ri-dashboard-line"></i> All Models Overview
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'color' or subtab == 'colors' %}active{% endif %}" onclick="switchTaxTab('color')">
+    <i class="ri-palette-line"></i> Colors ({{ colors|length }})
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'material' or subtab == 'materials' %}active{% endif %}" onclick="switchTaxTab('material')">
+    <i class="ri-leaf-line"></i> Materials ({{ materials|length }})
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'construction' or subtab == 'constructions' %}active{% endif %}" onclick="switchTaxTab('construction')">
+    <i class="ri-hammer-line"></i> Constructions ({{ constructions|length }})
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'feature' or subtab == 'features' %}active{% endif %}" onclick="switchTaxTab('feature')">
+    <i class="ri-shield-star-line"></i> Features ({{ features|length }})
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'size' or subtab == 'sizes' %}active{% endif %}" onclick="switchTaxTab('size')">
+    <i class="ri-ruler-2-line"></i> Sizes ({{ sizes|length }})
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'menu_item' or subtab == 'links' %}active{% endif %}" onclick="switchTaxTab('menu_item')">
+    <i class="ri-links-line"></i> Mega Menu Links ({{ menu_items|length }})
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'mega_column' or subtab == 'columns' %}active{% endif %}" onclick="switchTaxTab('mega_column')">
+    <i class="ri-layout-column-line"></i> Columns & Banners ({{ column_configs|length }})
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'collection' or subtab == 'collections' %}active{% endif %}" onclick="switchTaxTab('collection')">
+    <i class="ri-layout-grid-line"></i> Collections ({{ collections|length }})
+  </button>
+  <button type="button" class="tab-btn {% if subtab == 'category' or subtab == 'categories' %}active{% endif %}" onclick="switchTaxTab('category')">
+    <i class="ri-folders-line"></i> Categories ({{ categories|length }})
+  </button>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 1: COLORS MODEL -->
+<!-- ======================================================== -->
+<div id="tab-color" class="tax-tab-content" style="{% if subtab != 'color' and subtab != 'colors' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-palette-line" style="color: var(--gold-primary);"></i>
+          <span>Color Palettes (Color Database Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Displayed in Storefront Mega-Menu under "Color" column and selectable as Primary Color during Rug Upload.
+        </div>
+      </div>
+      <button type="button" class="btn btn-gold btn-sm" onclick="toggleForm('addColorForm')">
+        <i class="ri-add-line"></i> + Add New Color
+      </button>
+    </div>
+
+    <!-- Inline Add Color Form -->
+    <div id="addColorForm" style="display: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); padding: 20px;">
+      <form method="POST" action="{% url 'storefront:dashboard_taxonomy_create' 'color' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Color Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Cobalt Blue, Terracotta" required>
+        </div>
+        <div>
+          <label class="form-label">Color Family</label>
+          <select name="color_family" class="form-control">
+            {% for code, label in color_families %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Hex Color Swatch</label>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <input type="color" id="hexPickerColor" value="#2B4C7E" onchange="document.getElementById('hexInputColor').value=this.value" style="width: 38px; height: 38px; border-radius: 6px; border: 1px solid var(--border-color); padding: 2px; background: transparent; cursor: pointer;">
+            <input type="text" name="hex_code" id="hexInputColor" class="form-control" value="#2B4C7E" required>
+          </div>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-gold" style="width: 100%; height: 40px; justify-content: center;">
+            Save Color
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Swatch</th>
+            <th>Color Name</th>
+            <th>Color Family</th>
+            <th>Hex Code</th>
+            <th>Catalog Link</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in colors %}
+            <tr>
+              <td>
+                <span style="display: inline-block; width: 26px; height: 26px; border-radius: 6px; background-color: {{ c.hex_code }}; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 6px rgba(0,0,0,0.4);"></span>
+              </td>
+              <td style="font-weight: 600; color: #FFF;">{{ c.name }}</td>
+              <td><span class="badge badge-secondary">{{ c.get_color_family_display }}</span></td>
+              <td><code style="font-size: 11.5px; color: var(--gold-light);">{{ c.hex_code }}</code></td>
+              <td>
+                <a href="{% url 'storefront:rugs' %}?color={{ c.name }}" target="_blank" style="color: var(--text-dim); font-size: 12px; text-decoration: underline;">
+                  View in Rugs Catalog <i class="ri-external-link-line"></i>
+                </a>
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditColor('{{ c.id }}', '{{ c.name|escapejs }}', '{{ c.color_family }}', '{{ c.hex_code }}')" title="Edit Color">
+                  <i class="ri-edit-line"></i> Edit
+                </button>
+                <form method="POST" action="{% url 'storefront:dashboard_taxonomy_delete' 'color' c.id %}" style="display: inline;" onsubmit="return confirm('Delete color \'{{ c.name }}\' from database?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Color">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 24px;">No colors found in database.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 2: MATERIALS MODEL -->
+<!-- ======================================================== -->
+<div id="tab-material" class="tax-tab-content" style="{% if subtab != 'material' and subtab != 'materials' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-leaf-line" style="color: var(--gold-primary);"></i>
+          <span>Yarns & Materials (Material Database Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Displayed in Storefront Mega-Menu under "Material" column and selectable as Primary Material during Rug Upload.
+        </div>
+      </div>
+      <button type="button" class="btn btn-gold btn-sm" onclick="toggleForm('addMaterialForm')">
+        <i class="ri-add-line"></i> + Add New Material
+      </button>
+    </div>
+
+    <!-- Inline Add Material Form -->
+    <div id="addMaterialForm" style="display: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); padding: 20px;">
+      <form method="POST" action="{% url 'storefront:dashboard_taxonomy_create' 'material' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Material Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. 100% Wool, Fine Silk Blend" required>
+        </div>
+        <div>
+          <label class="form-label">Softness Rating (1-10)</label>
+          <input type="number" name="softness_score" min="1" max="10" class="form-control" value="9">
+        </div>
+        <div>
+          <label class="form-label">Durability Rating (1-10)</label>
+          <input type="number" name="durability_score" min="1" max="10" class="form-control" value="9">
+        </div>
+        <div>
+          <label class="form-label">Description (Optional)</label>
+          <input type="text" name="description" class="form-control" placeholder="Origin, fiber texture, softness">
+        </div>
+        <div style="display: flex; align-items: center; height: 40px;">
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px;">
+            <input type="checkbox" name="is_natural" checked>
+            <span>100% Natural Fiber</span>
+          </label>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-gold" style="width: 100%; height: 40px; justify-content: center;">
+            Save Material
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Material Name</th>
+            <th>Type</th>
+            <th>Softness</th>
+            <th>Durability</th>
+            <th>Description</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in materials %}
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: #FFF;">{{ m.name }}</div>
+              </td>
+              <td>
+                {% if m.is_natural %}
+                  <span class="badge badge-success">100% Natural</span>
+                {% else %}
+                  <span class="badge badge-gold">Engineered Poly</span>
+                {% endif %}
+              </td>
+              <td style="color: var(--gold-light); font-weight: 700;">{{ m.softness_score }}/10</td>
+              <td style="color: #34D399; font-weight: 700;">{{ m.durability_score }}/10</td>
+              <td style="font-size: 11.5px; color: var(--text-dim); max-width: 320px;">{{ m.description|truncatechars:90 }}</td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMaterial('{{ m.id }}', '{{ m.name|escapejs }}', '{{ m.description|escapejs }}', '{{ m.is_natural|yesno:'1,0' }}', '{{ m.softness_score }}', '{{ m.durability_score }}')" title="Edit Material">
+                  <i class="ri-edit-line"></i> Edit
+                </button>
+                <form method="POST" action="{% url 'storefront:dashboard_taxonomy_delete' 'material' m.id %}" style="display: inline;" onsubmit="return confirm('Delete material \'{{ m.name }}\'?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Material">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 24px;">No materials found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 3: CONSTRUCTIONS MODEL -->
+<!-- ======================================================== -->
+<div id="tab-construction" class="tax-tab-content" style="{% if subtab != 'construction' and subtab != 'constructions' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-hammer-line" style="color: var(--gold-primary);"></i>
+          <span>Construction Techniques (ConstructionType Database Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Displayed in Storefront Mega-Menu under "Construction" column and selectable as Construction Technique during Rug Upload.
+        </div>
+      </div>
+      <button type="button" class="btn btn-gold btn-sm" onclick="toggleForm('addConstForm')">
+        <i class="ri-add-line"></i> + Add New Technique
+      </button>
+    </div>
+
+    <!-- Inline Add Construction Form -->
+    <div id="addConstForm" style="display: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); padding: 20px;">
+      <form method="POST" action="{% url 'storefront:dashboard_taxonomy_create' 'construction' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Technique Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Hand Knotted, Hand Tufted" required>
+        </div>
+        <div>
+          <label class="form-label">Typical Density</label>
+          <input type="text" name="knot_count_typical" class="form-control" value="80-120 KPSI" placeholder="e.g. 100-200 KPSI">
+        </div>
+        <div>
+          <label class="form-label">Lead Time (Weeks)</label>
+          <input type="number" name="production_lead_weeks" class="form-control" value="12">
+        </div>
+        <div>
+          <label class="form-label">Heritage Region</label>
+          <input type="text" name="heritage_region" class="form-control" value="Bhadohi, India">
+        </div>
+        <div>
+          <button type="submit" class="btn btn-gold" style="width: 100%; height: 40px; justify-content: center;">
+            Save Technique
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Technique Name</th>
+            <th>Knot Density</th>
+            <th>Lead Time</th>
+            <th>Heritage Region</th>
+            <th>Description</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ct in constructions %}
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: #FFF;">{{ ct.name }}</div>
+              </td>
+              <td style="color: var(--gold-light); font-weight: 600; font-size: 12px;">{{ ct.knot_count_typical }}</td>
+              <td style="color: var(--text-muted); font-size: 12px;">{{ ct.production_lead_weeks }} weeks</td>
+              <td style="color: var(--text-main); font-size: 12px;">{{ ct.heritage_region }}</td>
+              <td style="font-size: 11px; color: var(--text-dim); max-width: 250px;">{{ ct.description|truncatechars:70 }}</td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditConstruction('{{ ct.id }}', '{{ ct.name|escapejs }}', '{{ ct.description|escapejs }}', '{{ ct.knot_count_typical|escapejs }}', '{{ ct.production_lead_weeks }}', '{{ ct.heritage_region|escapejs }}')" title="Edit Technique">
+                  <i class="ri-edit-line"></i> Edit
+                </button>
+                <form method="POST" action="{% url 'storefront:dashboard_taxonomy_delete' 'construction' ct.id %}" style="display: inline;" onsubmit="return confirm('Delete technique \'{{ ct.name }}\'?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Technique">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 24px;">No construction techniques found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 4: FEATURES MODEL -->
+<!-- ======================================================== -->
+<div id="tab-feature" class="tax-tab-content" style="{% if subtab != 'feature' and subtab != 'features' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-shield-star-line" style="color: var(--gold-primary);"></i>
+          <span>Rug Features & Certifications (ProductFeature Database Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Displayed in Storefront Mega-Menu and multi-selectable during Rug Upload (Performance, Indoor/Outdoor, Washables, Rug Pads, Stain Resistant Coating).
+        </div>
+      </div>
+      <button type="button" class="btn btn-gold btn-sm" onclick="toggleForm('addFeatureForm')">
+        <i class="ri-add-line"></i> + Add New Feature
+      </button>
+    </div>
+
+    <!-- Inline Add Feature Form -->
+    <div id="addFeatureForm" style="display: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); padding: 20px;">
+      <form method="POST" action="{% url 'storefront:dashboard_taxonomy_create' 'feature' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Feature Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Washables, Stain Resistant Coating" required>
+        </div>
+        <div>
+          <label class="form-label">Remix Icon Class</label>
+          <input type="text" name="icon" class="form-control" value="ri-shield-star-line" placeholder="e.g. ri-sun-line, ri-drop-line">
+        </div>
+        <div>
+          <label class="form-label">Sort Order</label>
+          <input type="number" name="sort_order" class="form-control" value="0">
+        </div>
+        <div>
+          <label class="form-label">Feature Description</label>
+          <input type="text" name="description" class="form-control" placeholder="Functional benefits">
+        </div>
+        <div style="display: flex; align-items: center; height: 40px;">
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px;">
+            <input type="checkbox" name="is_highlighted" checked>
+            <span>Highlight in Mega-Menu</span>
+          </label>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-gold" style="width: 100%; height: 40px; justify-content: center;">
+            Save Feature
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Icon</th>
+            <th>Feature Name</th>
+            <th>Slug</th>
+            <th>Highlight Status</th>
+            <th>Sort Order</th>
+            <th>Description</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in features %}
+            <tr>
+              <td>
+                <span style="display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 6px; background: rgba(201, 169, 130, 0.15); color: var(--gold-primary); font-size: 16px;">
+                  <i class="{{ f.icon|default:'ri-checkbox-circle-line' }}"></i>
+                </span>
+              </td>
+              <td style="font-weight: 600; color: #FFF;">{{ f.name }}</td>
+              <td><code style="font-size: 11.5px; color: var(--gold-light);">{{ f.slug }}</code></td>
+              <td>
+                {% if f.is_highlighted %}
+                  <span class="badge badge-success">Mega-Menu Active</span>
+                {% else %}
+                  <span class="badge badge-secondary">Standard</span>
+                {% endif %}
+              </td>
+              <td style="color: var(--text-muted); font-size: 12px;">{{ f.sort_order }}</td>
+              <td style="font-size: 11.5px; color: var(--text-dim); max-width: 280px;">{{ f.description|truncatechars:80 }}</td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditFeature('{{ f.id }}', '{{ f.name|escapejs }}', '{{ f.icon|escapejs }}', '{{ f.description|escapejs }}', '{{ f.is_highlighted|yesno:'1,0' }}', '{{ f.sort_order }}')" title="Edit Feature">
+                  <i class="ri-edit-line"></i> Edit
+                </button>
+                <form method="POST" action="{% url 'storefront:dashboard_taxonomy_delete' 'feature' f.id %}" style="display: inline;" onsubmit="return confirm('Delete feature \'{{ f.name }}\'?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Feature">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 24px;">No product features found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 5: SIZES MODEL -->
+<!-- ======================================================== -->
+<div id="tab-size" class="tax-tab-content" style="{% if subtab != 'size' and subtab != 'sizes' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-ruler-2-line" style="color: var(--gold-primary);"></i>
+          <span>Standard Dimensions & SqFt (Size Database Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Displayed in Storefront Mega-Menu under "In Stock Now" column and used as size presets during Rug Upload.
+        </div>
+      </div>
+      <button type="button" class="btn btn-gold btn-sm" onclick="toggleForm('addSizeForm')">
+        <i class="ri-add-line"></i> + Add New Size
+      </button>
+    </div>
+
+    <!-- Inline Add Size Form -->
+    <div id="addSizeForm" style="display: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); padding: 20px;">
+      <form method="POST" action="{% url 'storefront:dashboard_taxonomy_create' 'size' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Dimension Label *</label>
+          <input type="text" name="label" class="form-control" placeholder="e.g. 6X9, 8'X10', Runners" required>
+        </div>
+        <div>
+          <label class="form-label">Size Category</label>
+          <select name="size_type" class="form-control">
+            {% for code, label in size_types %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Width (Inches)</label>
+          <input type="number" name="width_inches" class="form-control" placeholder="96">
+        </div>
+        <div>
+          <label class="form-label">Length (Inches)</label>
+          <input type="number" name="length_inches" class="form-control" placeholder="120">
+        </div>
+        <div>
+          <label class="form-label">Approx Area (SqFt)</label>
+          <input type="number" step="0.1" name="sqft" class="form-control" placeholder="80.0">
+        </div>
+        <div>
+          <button type="submit" class="btn btn-gold" style="width: 100%; height: 40px; justify-content: center;">
+            Save Size
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Dimension Label</th>
+            <th>Type</th>
+            <th>Width x Length</th>
+            <th>Approx Area</th>
+            <th>Catalog Filter</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sizes %}
+            <tr>
+              <td style="font-weight: 700; color: #FFF; font-size: 13.5px;">{{ s.label }}</td>
+              <td><span class="badge badge-secondary">{{ s.get_size_type_display }}</span></td>
+              <td style="color: var(--text-muted); font-size: 12px;">
+                {% if s.width_inches and s.length_inches %}
+                  {{ s.width_inches }}" x {{ s.length_inches }}"
+                {% else %}
+                  Custom
+                {% endif %}
+              </td>
+              <td style="color: var(--gold-light); font-weight: 600;">
+                {% if s.sqft %}{{ s.sqft }} sq ft{% else %}—{% endif %}
+              </td>
+              <td>
+                <a href="{% url 'storefront:rugs' %}?size={{ s.label }}" target="_blank" style="color: var(--text-dim); font-size: 12px; text-decoration: underline;">
+                  View {{ s.label }} Rugs <i class="ri-external-link-line"></i>
+                </a>
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditSize('{{ s.id }}', '{{ s.label|escapejs }}', '{{ s.size_type }}', '{{ s.width_inches|default:'' }}', '{{ s.length_inches|default:'' }}', '{{ s.sqft|default:'' }}')" title="Edit Size">
+                  <i class="ri-edit-line"></i> Edit
+                </button>
+                <form method="POST" action="{% url 'storefront:dashboard_taxonomy_delete' 'size' s.id %}" style="display: inline;" onsubmit="return confirm('Delete size dimension \'{{ s.label }}\'?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Size">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 24px;">No standard sizes found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 6: MEGA MENU LINKS MODEL (FEATURED, CUSTOM, ONE-OF-A-KIND) -->
+<!-- ======================================================== -->
+<div id="tab-menu_item" class="tax-tab-content" style="{% if subtab != 'menu_item' and subtab != 'links' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-links-line" style="color: var(--gold-primary);"></i>
+          <span>Storefront Mega-Menu Links (MegaMenuItem Database Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Controls the links in the "Featured", "Custom", and "One of a kind" columns of the Storefront Mega-Menu without hardcoding.
+        </div>
+      </div>
+      <button type="button" class="btn btn-gold btn-sm" onclick="toggleForm('addMenuLinkForm')">
+        <i class="ri-add-line"></i> + Add New Menu Link
+      </button>
+    </div>
+
+    <!-- Inline Add Menu Link Form -->
+    <div id="addMenuLinkForm" style="display: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); padding: 20px;">
+      <form method="POST" action="{% url 'storefront:dashboard_taxonomy_create' 'menu_item' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Menu Section *</label>
+          <select name="section" class="form-control">
+            {% for code, label in menu_sections %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Link Title *</label>
+          <input type="text" name="title" class="form-control" placeholder="e.g. New Arrivals, Vintage" required>
+        </div>
+        <div>
+          <label class="form-label">Destination URL *</label>
+          <input type="text" name="url" class="form-control" value="/rugs/" placeholder="/rugs/ or /contract/" required>
+        </div>
+        <div>
+          <label class="form-label">Badge (Optional)</label>
+          <input type="text" name="badge" class="form-control" placeholder="e.g. NEW, LUXE">
+        </div>
+        <div>
+          <label class="form-label">Sort Order</label>
+          <input type="number" name="sort_order" class="form-control" value="0">
+        </div>
+        <div>
+          <button type="submit" class="btn btn-gold" style="width: 100%; height: 40px; justify-content: center;">
+            Save Link
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Section</th>
+            <th>Link Title</th>
+            <th>Destination URL</th>
+            <th>Badge</th>
+            <th>Sort Order</th>
+            <th>Preview Link</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in menu_items %}
+            <tr>
+              <td><span class="badge badge-gold">{{ item.get_section_display }}</span></td>
+              <td style="font-weight: 600; color: #FFF;">{{ item.title }}</td>
+              <td><code style="font-size: 11.5px; color: var(--gold-light);">{{ item.url }}</code></td>
+              <td>{% if item.badge %}<span class="badge badge-success">{{ item.badge }}</span>{% else %}<span style="color:var(--text-dim);">—</span>{% endif %}</td>
+              <td style="color: var(--text-muted); font-size: 12px;">{{ item.sort_order }}</td>
+              <td>
+                <a href="{{ item.url }}" target="_blank" style="color: var(--text-dim); font-size: 12px; text-decoration: underline;">
+                  Open Destination <i class="ri-external-link-line"></i>
+                </a>
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMenuItem('{{ item.id }}', '{{ item.section }}', '{{ item.title|escapejs }}', '{{ item.url|escapejs }}', '{{ item.badge|default:''|escapejs }}', '{{ item.sort_order }}', '{{ item.is_active|yesno:'1,0' }}')" title="Edit Link">
+                  <i class="ri-edit-line"></i> Edit
+                </button>
+                <form method="POST" action="{% url 'storefront:dashboard_taxonomy_delete' 'menu_item' item.id %}" style="display: inline;" onsubmit="return confirm('Delete mega-menu link \'{{ item.title }}\'?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Link">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 24px;">No custom mega-menu items found in database.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 7: MEGA MENU COLUMNS & PROMO BANNERS -->
+<!-- ======================================================== -->
+<div id="tab-mega_column" class="tax-tab-content" style="{% if subtab != 'mega_column' and subtab != 'columns' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-layout-column-line" style="color: var(--gold-primary);"></i>
+          <span>Mega-Menu Columns & Promotional Banners (MegaMenuColumnConfig Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Full database control over column titles, subtitles, visibility, and promotional image cards inside the dropdown.
+        </div>
+      </div>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Column Identifier</th>
+            <th>Display Title</th>
+            <th>Subtitle</th>
+            <th>Visibility</th>
+            <th>Promo Banner</th>
+            <th>Sort Order</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for col in column_configs %}
+            <tr>
+              <td>
+                <span class="badge badge-gold" style="font-family: monospace;">{{ col.column_key }}</span>
+              </td>
+              <td style="font-weight: 700; color: #FFF; font-size: 13.5px;">{{ col.display_title }}</td>
+              <td style="color: var(--text-muted); font-size: 12px;">{{ col.subtitle|default:"—" }}</td>
+              <td>
+                {% if col.is_visible %}
+                  <span class="badge badge-success"><i class="ri-eye-line"></i> Visible</span>
+                {% else %}
+                  <span class="badge badge-secondary"><i class="ri-eye-off-line"></i> Hidden</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if col.promo_banner_active and col.promo_banner_image %}
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <img src="{{ col.promo_banner_image }}" alt="Promo" style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover;">
+                    <span style="font-size: 11px; color: #34D399;">Active Promo</span>
+                  </div>
+                {% else %}
+                  <span style="font-size: 11px; color: var(--text-dim);">Disabled</span>
+                {% endif %}
+              </td>
+              <td style="color: var(--text-muted); font-size: 12px;">{{ col.sort_order }}</td>
+              <td style="text-align: right;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditColumn('{{ col.id }}', '{{ col.display_title|escapejs }}', '{{ col.subtitle|default:''|escapejs }}', '{{ col.is_visible|yesno:'1,0' }}', '{{ col.sort_order }}', '{{ col.promo_banner_active|yesno:'1,0' }}', '{{ col.promo_banner_title|default:''|escapejs }}', '{{ col.promo_banner_link|default:''|escapejs }}', '{{ col.promo_banner_image|default:''|escapejs }}')" title="Configure Column">
+                  <i class="ri-settings-3-line"></i> Configure
+                </button>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 24px;">No column configs found. Run reseed tools to populate default 6 columns.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 8: RUG COLLECTIONS -->
+<!-- ======================================================== -->
+<div id="tab-collection" class="tax-tab-content" style="{% if subtab != 'collection' and subtab != 'collections' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-layout-grid-line" style="color: var(--gold-primary);"></i>
+          <span>Rug Collections (RugCollection Database Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Manage rug collections, designer collaborations, hero banners, and launch seasons.
+        </div>
+      </div>
+      <button type="button" class="btn btn-gold btn-sm" onclick="toggleForm('addCollectionForm')">
+        <i class="ri-add-line"></i> + Add New Collection
+      </button>
+    </div>
+
+    <!-- Inline Add Collection Form -->
+    <div id="addCollectionForm" style="display: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); padding: 20px;">
+      <form method="POST" enctype="multipart/form-data" action="{% url 'storefront:dashboard_taxonomy_create' 'collection' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Collection Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Genesis, CallaLuxe, Tierzah" required>
+        </div>
+        <div>
+          <label class="form-label">Designer / Studio</label>
+          <select name="designer" class="form-control">
+            <option value="">AZI HOME Master Weavers</option>
+            {% for d in designers %}
+              <option value="{{ d.id }}">{{ d.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Tagline</label>
+          <input type="text" name="tagline" class="form-control" placeholder="e.g. Heirlooms of Tomorrow">
+        </div>
+        <div>
+          <label class="form-label">Launch Season</label>
+          <input type="text" name="launch_season" class="form-control" value="Fall / Winter 2026">
+        </div>
+        <div>
+          <label class="form-label">Hero Banner Image Upload</label>
+          <input type="file" name="hero_image_file" class="form-control" accept="image/*">
+        </div>
+        <div style="display: flex; align-items: center; height: 40px;">
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px;">
+            <input type="checkbox" name="is_featured" checked>
+            <span>Feature on Storefront</span>
+          </label>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-gold" style="width: 100%; height: 40px; justify-content: center;">
+            Save Collection
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Banner</th>
+            <th>Collection Name</th>
+            <th>Designer</th>
+            <th>Tagline</th>
+            <th>Season</th>
+            <th>Featured</th>
+            <th>Catalog Link</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for col in collections %}
+            <tr>
+              <td>
+                {% if col.hero_image %}
+                  <img src="{{ col.hero_image }}" alt="{{ col.name }}" style="width: 44px; height: 32px; border-radius: 4px; object-fit: cover;">
+                {% else %}
+                  <div style="width: 44px; height: 32px; border-radius: 4px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-dim);">No img</div>
+                {% endif %}
+              </td>
+              <td style="font-weight: 700; color: #FFF; font-size: 13.5px;">{{ col.name }}</td>
+              <td style="color: var(--gold-light); font-size: 12px;">{{ col.designer.name|default:"AZI HOME Master Weavers" }}</td>
+              <td style="color: var(--text-muted); font-size: 12px;">{{ col.tagline|default:"—" }}</td>
+              <td style="color: var(--text-dim); font-size: 11.5px;">{{ col.launch_season }}</td>
+              <td>
+                {% if col.is_featured %}
+                  <span class="badge badge-success">Featured</span>
+                {% else %}
+                  <span class="badge badge-secondary">Standard</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'storefront:rugs_collection' col.slug %}" target="_blank" style="color: var(--text-dim); font-size: 12px; text-decoration: underline;">
+                  View Catalog <i class="ri-external-link-line"></i>
+                </a>
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditCollection('{{ col.id }}', '{{ col.name|escapejs }}', '{{ col.designer_id|default:'' }}', '{{ col.tagline|default:''|escapejs }}', '{{ col.description|default:''|escapejs }}', '{{ col.launch_season|default:''|escapejs }}', '{{ col.is_featured|yesno:'1,0' }}', '{{ col.hero_image|default:''|escapejs }}')" title="Edit Collection">
+                  <i class="ri-edit-line"></i> Edit
+                </button>
+                <form method="POST" action="{% url 'storefront:dashboard_taxonomy_delete' 'collection' col.id %}" style="display: inline;" onsubmit="return confirm('Delete collection \'{{ col.name }}\'?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Collection">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 24px;">No rug collections found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- TAB 9: PRODUCT CATEGORIES -->
+<!-- ======================================================== -->
+<div id="tab-category" class="tax-tab-content" style="{% if subtab != 'category' and subtab != 'categories' and subtab != 'overview' and subtab %}display:none;{% endif %} margin-bottom: 32px;">
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="panel-title">
+          <i class="ri-folders-line" style="color: var(--gold-primary);"></i>
+          <span>Product Categories (Category Database Model)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+          Primary product department classifications (e.g. Area Rugs, Runners, Accessories, Pillows, Throws).
+        </div>
+      </div>
+      <button type="button" class="btn btn-gold btn-sm" onclick="toggleForm('addCategoryForm')">
+        <i class="ri-add-line"></i> + Add New Category
+      </button>
+    </div>
+
+    <!-- Inline Add Category Form -->
+    <div id="addCategoryForm" style="display: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); padding: 20px;">
+      <form method="POST" action="{% url 'storefront:dashboard_taxonomy_create' 'category' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Category Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Area Rugs, Accent Pillows" required>
+        </div>
+        <div>
+          <label class="form-label">Category Image URL</label>
+          <input type="text" name="image_url" class="form-control" placeholder="https://domain.com/path.jpg">
+        </div>
+        <div>
+          <label class="form-label">Description</label>
+          <input type="text" name="description" class="form-control" placeholder="Category overview">
+        </div>
+        <div>
+          <button type="submit" class="btn btn-gold" style="width: 100%; height: 40px; justify-content: center;">
+            Save Category
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Category Name</th>
+            <th>Slug</th>
+            <th>Description</th>
+            <th>Total Products</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cat in categories %}
+            <tr>
+              <td style="font-weight: 700; color: #FFF; font-size: 13.5px;">{{ cat.name }}</td>
+              <td><code style="font-size: 11.5px; color: var(--gold-light);">{{ cat.slug }}</code></td>
+              <td style="color: var(--text-muted); font-size: 12px; max-width: 350px;">{{ cat.description|default:"—" }}</td>
+              <td><span class="badge badge-secondary">{{ cat.products.count }} products</span></td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditCategory('{{ cat.id }}', '{{ cat.name|escapejs }}', '{{ cat.description|default:''|escapejs }}', '{{ cat.image_url|default:''|escapejs }}')" title="Edit Category">
+                  <i class="ri-edit-line"></i> Edit
+                </button>
+                <form method="POST" action="{% url 'storefront:dashboard_taxonomy_delete' 'category' cat.id %}" style="display: inline;" onsubmit="return confirm('Delete category \'{{ cat.name }}\'?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Category">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 24px;">No categories found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- ======================================================== -->
+<!-- MODAL OVERLAYS FOR EDITING -->
+<!-- ======================================================== -->
+
+<!-- Modal 1: Edit Color -->
+<div id="modalEditColor" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-palette-line" style="color: var(--gold-primary);"></i> Edit Color Palette
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditColor')">&times;</button>
+    </div>
+    <form id="formEditColor" method="POST" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-group">
+          <label class="form-label">Color Name *</label>
+          <input type="text" id="editColorName" name="name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color Family</label>
+          <select id="editColorFamily" name="color_family" class="form-control">
+            {% for code, label in color_families %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hex Color Swatch</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="color" id="editColorPicker" style="width: 44px; height: 38px; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; background: transparent;" onchange="document.getElementById('editColorHex').value=this.value">
+            <input type="text" id="editColorHex" name="hex_code" class="form-control" required onchange="document.getElementById('editColorPicker').value=this.value">
+          </div>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditColor')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Update Color</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Edit Material -->
+<div id="modalEditMaterial" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-leaf-line" style="color: var(--gold-primary);"></i> Edit Material
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditMaterial')">&times;</button>
+    </div>
+    <form id="formEditMaterial" method="POST" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-group">
+          <label class="form-label">Material Name *</label>
+          <input type="text" id="editMaterialName" name="name" class="form-control" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Softness Rating (1-10)</label>
+            <input type="number" id="editMaterialSoftness" name="softness_score" min="1" max="10" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Durability Rating (1-10)</label>
+            <input type="number" id="editMaterialDurability" name="durability_score" min="1" max="10" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="editMaterialDesc" name="description" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="editMaterialNatural" name="is_natural">
+          <label for="editMaterialNatural" style="color: #FFF; font-size: 13px; cursor: pointer;">100% Natural Fiber Origin</label>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditMaterial')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Update Material</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 3: Edit Construction -->
+<div id="modalEditConstruction" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-hammer-line" style="color: var(--gold-primary);"></i> Edit Construction Technique
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditConstruction')">&times;</button>
+    </div>
+    <form id="formEditConstruction" method="POST" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-group">
+          <label class="form-label">Technique Name *</label>
+          <input type="text" id="editConstName" name="name" class="form-control" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Knot Density (KPSI)</label>
+            <input type="text" id="editConstKnots" name="knot_count_typical" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Production Lead Time (Weeks)</label>
+            <input type="number" id="editConstLead" name="production_lead_weeks" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Heritage Region</label>
+          <input type="text" id="editConstRegion" name="heritage_region" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="editConstDesc" name="description" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditConstruction')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Update Technique</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 4: Edit Feature -->
+<div id="modalEditFeature" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-shield-star-line" style="color: var(--gold-primary);"></i> Edit Feature
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditFeature')">&times;</button>
+    </div>
+    <form id="formEditFeature" method="POST" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-group">
+          <label class="form-label">Feature Name *</label>
+          <input type="text" id="editFeatureName" name="name" class="form-control" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Remix Icon Class</label>
+            <input type="text" id="editFeatureIcon" name="icon" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sort Order</label>
+            <input type="number" id="editFeatureOrder" name="sort_order" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="editFeatureDesc" name="description" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="editFeatureHighlight" name="is_highlighted">
+          <label for="editFeatureHighlight" style="color: #FFF; font-size: 13px; cursor: pointer;">Mega-Menu Active / Highlighted</label>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditFeature')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Update Feature</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 5: Edit Size -->
+<div id="modalEditSize" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-ruler-2-line" style="color: var(--gold-primary);"></i> Edit Size Dimension
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditSize')">&times;</button>
+    </div>
+    <form id="formEditSize" method="POST" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-group">
+          <label class="form-label">Dimension Label *</label>
+          <input type="text" id="editSizeLabel" name="label" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Size Category</label>
+          <select id="editSizeType" name="size_type" class="form-control">
+            {% for code, label in size_types %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Width (Inches)</label>
+            <input type="number" id="editSizeWidth" name="width_inches" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Length (Inches)</label>
+            <input type="number" id="editSizeLength" name="length_inches" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Area (SqFt)</label>
+            <input type="number" step="0.1" id="editSizeSqft" name="sqft" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditSize')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Update Size</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 6: Edit Mega Menu Link -->
+<div id="modalEditMenuItem" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-links-line" style="color: var(--gold-primary);"></i> Edit Mega-Menu Link
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditMenuItem')">&times;</button>
+    </div>
+    <form id="formEditMenuItem" method="POST" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-group">
+          <label class="form-label">Section *</label>
+          <select id="editMenuSection" name="section" class="form-control">
+            {% for code, label in menu_sections %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Link Title *</label>
+          <input type="text" id="editMenuTitle" name="title" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Destination URL *</label>
+          <input type="text" id="editMenuUrl" name="url" class="form-control" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Badge</label>
+            <input type="text" id="editMenuBadge" name="badge" class="form-control" placeholder="e.g. NEW">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sort Order</label>
+            <input type="number" id="editMenuOrder" name="sort_order" class="form-control">
+          </div>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="editMenuActive" name="is_active">
+          <label for="editMenuActive" style="color: #FFF; font-size: 13px; cursor: pointer;">Active & Visible in Menu</label>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditMenuItem')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Update Link</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 7: Edit Mega Menu Column & Banner -->
+<div id="modalEditColumn" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card" style="max-width: 650px;">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-layout-column-line" style="color: var(--gold-primary);"></i> Configure Mega-Menu Column & Promo Banner
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditColumn')">&times;</button>
+    </div>
+    <form id="formEditColumn" method="POST" enctype="multipart/form-data" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Column Display Title *</label>
+            <input type="text" id="editColTitle" name="display_title" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subtitle (Optional)</label>
+            <input type="text" id="editColSubtitle" name="subtitle" class="form-control" placeholder="e.g. One of a kind">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Sort Order</label>
+            <input type="number" id="editColOrder" name="sort_order" class="form-control">
+          </div>
+          <div class="form-check" style="margin-top: 28px;">
+            <input type="checkbox" id="editColVisible" name="is_visible">
+            <label for="editColVisible" style="color: #FFF; font-size: 13px; cursor: pointer;">Column is Visible on Storefront</label>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 14px; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(0,0,0,0.2);">
+          <div style="font-size: 13px; font-weight: 700; color: var(--gold-primary); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <span>Promotional Image Banner Inside Dropdown</span>
+            <div class="form-check" style="margin: 0;">
+              <input type="checkbox" id="editColPromoActive" name="promo_banner_active">
+              <label for="editColPromoActive" style="color: #34D399; font-size: 12px; cursor: pointer;">Enable Promo Banner</label>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Banner Title</label>
+              <input type="text" id="editColPromoTitle" name="promo_banner_title" class="form-control" placeholder="e.g. Spring Designer Sale">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Banner Destination Link</label>
+              <input type="text" id="editColPromoLink" name="promo_banner_link" class="form-control" placeholder="/rugs/">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Upload New Promo Banner Image</label>
+            <input type="file" name="promo_banner_file" class="form-control" accept="image/*">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Or Promo Banner Image URL</label>
+            <input type="text" id="editColPromoImage" name="promo_banner_image" class="form-control" placeholder="https://domain.com/banner.jpg">
+          </div>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditColumn')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Save Column Configuration</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 8: Edit Collection -->
+<div id="modalEditCollection" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card" style="max-width: 650px;">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-layout-grid-line" style="color: var(--gold-primary);"></i> Edit Rug Collection
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditCollection')">&times;</button>
+    </div>
+    <form id="formEditCollection" method="POST" enctype="multipart/form-data" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Collection Name *</label>
+            <input type="text" id="editCollName" name="name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Designer / Studio</label>
+            <select id="editCollDesigner" name="designer" class="form-control">
+              <option value="">AZI HOME Master Weavers</option>
+              {% for d in designers %}
+                <option value="{{ d.id }}">{{ d.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tagline</label>
+            <input type="text" id="editCollTagline" name="tagline" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Launch Season</label>
+            <input type="text" id="editCollSeason" name="launch_season" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="editCollDesc" name="description" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Upload New Hero Banner Image</label>
+          <input type="file" name="hero_image_file" class="form-control" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Or Hero Banner Image URL</label>
+          <input type="text" id="editCollImage" name="hero_image" class="form-control">
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="editCollFeatured" name="is_featured">
+          <label for="editCollFeatured" style="color: #FFF; font-size: 13px; cursor: pointer;">Feature Collection prominently on Storefront</label>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditCollection')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Update Collection</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 9: Edit Category -->
+<div id="modalEditCategory" class="custom-modal-overlay" style="display: none;">
+  <div class="custom-modal-card">
+    <div class="custom-modal-header">
+      <h3 style="font-size: 16px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 8px;">
+        <i class="ri-folders-line" style="color: var(--gold-primary);"></i> Edit Category
+      </h3>
+      <button type="button" class="modal-close-icon" onclick="closeModal('modalEditCategory')">&times;</button>
+    </div>
+    <form id="formEditCategory" method="POST" action="">
+      {% csrf_token %}
+      <div class="custom-modal-body">
+        <div class="form-group">
+          <label class="form-label">Category Name *</label>
+          <input type="text" id="editCatName" name="name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category Image URL</label>
+          <input type="text" id="editCatImage" name="image_url" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="editCatDesc" name="description" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditCategory')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Update Category</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+  }
+  .tab-btn:hover {
+    color: #FFF;
+    background: rgba(255,255,255,0.04);
+  }
+  .tab-btn.active {
+    color: var(--gold-primary);
+    background: rgba(201, 169, 130, 0.12);
+    font-weight: 600;
+    border-bottom: 2px solid var(--gold-primary);
+  }
+
+  /* Modals */
+  .custom-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .custom-modal-card {
+    background: var(--bg-surface, #1A1F2C);
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    border-radius: 8px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  }
+  .custom-modal-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .custom-modal-body {
+    padding: 20px 24px;
+  }
+  .custom-modal-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: rgba(0,0,0,0.2);
+  }
+  .modal-close-icon {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal-close-icon:hover {
+    color: #FFF;
+  }
+</style>
+
+<script>
+  function toggleForm(formId) {
+    const el = document.getElementById(formId);
+    if (!el) return;
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function closeModal(modalId) {
+    const el = document.getElementById(modalId);
+    if (el) el.style.display = 'none';
+  }
+
+  function switchTaxTab(tabName) {
+    const allContents = document.querySelectorAll('.tax-tab-content');
+    const allBtns = document.querySelectorAll('.tab-btn');
+
+    allBtns.forEach(btn => btn.classList.remove('active'));
+
+    if (tabName === 'overview') {
+      allContents.forEach(c => c.style.display = 'block');
+      if (allBtns[0]) allBtns[0].classList.add('active');
+    } else {
+      allContents.forEach(c => c.style.display = 'none');
+      
+      let targetId = 'tab-' + tabName;
+      if (tabName.endsWith('s') && !['sizes', 'materials', 'constructions', 'colors', 'features', 'columns', 'collections', 'categories'].includes(tabName)) {
+        targetId = 'tab-' + tabName.slice(0, -1);
+      } else if (tabName === 'colors') {
+        targetId = 'tab-color';
+      } else if (tabName === 'materials') {
+        targetId = 'tab-material';
+      } else if (tabName === 'constructions') {
+        targetId = 'tab-construction';
+      } else if (tabName === 'features') {
+        targetId = 'tab-feature';
+      } else if (tabName === 'sizes') {
+        targetId = 'tab-size';
+      } else if (tabName === 'columns') {
+        targetId = 'tab-mega_column';
+      } else if (tabName === 'collections') {
+        targetId = 'tab-collection';
+      } else if (tabName === 'categories') {
+        targetId = 'tab-category';
+      }
+
+      const activeEl = document.getElementById(targetId);
+      if (activeEl) {
+        activeEl.style.display = 'block';
+      }
+
+      // Update URL search param without reload
+      const url = new URL(window.location);
+      url.searchParams.set('tab', tabName);
+      window.history.replaceState({}, '', url);
+
+      // Highlight clicked tab button
+      allBtns.forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabName)) {
+          btn.classList.add('active');
+        }
+      });
+    }
+  }
+
+  // Edit Open Handlers
+  function openEditColor(id, name, family, hex) {
+    document.getElementById('formEditColor').action = '/dashboard/taxonomy/color/' + id + '/edit/';
+    document.getElementById('editColorName').value = name;
+    document.getElementById('editColorFamily').value = family;
+    document.getElementById('editColorHex').value = hex;
+    document.getElementById('editColorPicker').value = hex;
+    document.getElementById('modalEditColor').style.display = 'flex';
+  }
+
+  function openEditMaterial(id, name, desc, isNatural, softness, durability) {
+    document.getElementById('formEditMaterial').action = '/dashboard/taxonomy/material/' + id + '/edit/';
+    document.getElementById('editMaterialName').value = name;
+    document.getElementById('editMaterialDesc').value = desc;
+    document.getElementById('editMaterialNatural').checked = (isNatural === '1');
+    document.getElementById('editMaterialSoftness').value = softness;
+    document.getElementById('editMaterialDurability').value = durability;
+    document.getElementById('modalEditMaterial').style.display = 'flex';
+  }
+
+  function openEditConstruction(id, name, desc, knotCount, leadWeeks, region) {
+    document.getElementById('formEditConstruction').action = '/dashboard/taxonomy/construction/' + id + '/edit/';
+    document.getElementById('editConstName').value = name;
+    document.getElementById('editConstDesc').value = desc;
+    document.getElementById('editConstKnots').value = knotCount;
+    document.getElementById('editConstLead').value = leadWeeks;
+    document.getElementById('editConstRegion').value = region;
+    document.getElementById('modalEditConstruction').style.display = 'flex';
+  }
+
+  function openEditFeature(id, name, icon, desc, highlighted, sortOrder) {
+    document.getElementById('formEditFeature').action = '/dashboard/taxonomy/feature/' + id + '/edit/';
+    document.getElementById('editFeatureName').value = name;
+    document.getElementById('editFeatureIcon').value = icon;
+    document.getElementById('editFeatureDesc').value = desc;
+    document.getElementById('editFeatureHighlight').checked = (highlighted === '1');
+    document.getElementById('editFeatureOrder').value = sortOrder;
+    document.getElementById('modalEditFeature').style.display = 'flex';
+  }
+
+  function openEditSize(id, label, sizeType, width, length, sqft) {
+    document.getElementById('formEditSize').action = '/dashboard/taxonomy/size/' + id + '/edit/';
+    document.getElementById('editSizeLabel').value = label;
+    document.getElementById('editSizeType').value = sizeType;
+    document.getElementById('editSizeWidth').value = width;
+    document.getElementById('editSizeLength').value = length;
+    document.getElementById('editSizeSqft').value = sqft;
+    document.getElementById('modalEditSize').style.display = 'flex';
+  }
+
+  function openEditMenuItem(id, section, title, url, badge, sortOrder, isActive) {
+    document.getElementById('formEditMenuItem').action = '/dashboard/taxonomy/menu_item/' + id + '/edit/';
+    document.getElementById('editMenuSection').value = section;
+    document.getElementById('editMenuTitle').value = title;
+    document.getElementById('editMenuUrl').value = url;
+    document.getElementById('editMenuBadge').value = badge;
+    document.getElementById('editMenuOrder').value = sortOrder;
+    document.getElementById('editMenuActive').checked = (isActive === '1');
+    document.getElementById('modalEditMenuItem').style.display = 'flex';
+  }
+
+  function openEditColumn(id, title, subtitle, isVisible, sortOrder, promoActive, promoTitle, promoLink, promoImage) {
+    document.getElementById('formEditColumn').action = '/dashboard/taxonomy/mega_column/' + id + '/edit/';
+    document.getElementById('editColTitle').value = title;
+    document.getElementById('editColSubtitle').value = subtitle;
+    document.getElementById('editColVisible').checked = (isVisible === '1');
+    document.getElementById('editColOrder').value = sortOrder;
+    document.getElementById('editColPromoActive').checked = (promoActive === '1');
+    document.getElementById('editColPromoTitle').value = promoTitle;
+    document.getElementById('editColPromoLink').value = promoLink;
+    document.getElementById('editColPromoImage').value = promoImage;
+    document.getElementById('modalEditColumn').style.display = 'flex';
+  }
+
+  function openEditCollection(id, name, designerId, tagline, desc, season, isFeatured, heroImage) {
+    document.getElementById('formEditCollection').action = '/dashboard/taxonomy/collection/' + id + '/edit/';
+    document.getElementById('editCollName').value = name;
+    document.getElementById('editCollDesigner').value = designerId;
+    document.getElementById('editCollTagline').value = tagline;
+    document.getElementById('editCollDesc').value = desc;
+    document.getElementById('editCollSeason').value = season;
+    document.getElementById('editCollFeatured').checked = (isFeatured === '1');
+    document.getElementById('editCollImage').value = heroImage;
+    document.getElementById('modalEditCollection').style.display = 'flex';
+  }
+
+  function openEditCategory(id, name, desc, imageUrl) {
+    document.getElementById('formEditCategory').action = '/dashboard/taxonomy/category/' + id + '/edit/';
+    document.getElementById('editCatName').value = name;
+    document.getElementById('editCatDesc').value = desc;
+    document.getElementById('editCatImage').value = imageUrl;
+    document.getElementById('modalEditCategory').style.display = 'flex';
+  }
+
+  // Auto-activate tab from URL query param if present
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab && tab !== 'overview') {
+      switchTaxTab(tab);
+    }
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_content.meta_title|default:"Luxury Home Decor & Accessories | AZI HOME" }}{% endblock %}
+
+{% block content %}
+<div class="section-wrapper" style="padding-top:40px;">
+  <!-- Breadcrumb -->
+  <div style="font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--color-text-light); margin-bottom:24px;">
+    <a href="{% url 'storefront:index' %}">Home</a> / <span>Decor</span>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px; border-bottom:1px solid var(--color-border); padding-bottom:16px; flex-wrap:wrap; gap:16px;">
+    <div>
+      <h1 style="font-family:var(--font-serif); font-size:2.4rem; font-weight:400; color:var(--color-ink);">
+        {{ page_content.title|default:"Pillows, Poufs & Accessories" }}
+      </h1>
+      <p style="color:var(--color-text-muted); font-size:0.9rem; margin-top:4px;">
+        {{ page_content.subtitle|default:"Showing handcrafted accents woven by artisans to elevate every corner of the home." }}
+      </p>
+    </div>
+
+    <!-- Dynamic Database Collection Filters -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{% url 'storefront:decor' %}" class="tab-btn {% if not selected_collection %}active{% endif %}">All Decor</a>
+      {% for coll in all_collections %}
+        <a href="{% url 'storefront:decor' %}?collection={{ coll.collection|urlencode }}" 
+           class="tab-btn {% if selected_collection == coll.collection %}active{% endif %}">
+          {{ coll.collection }} ({{ coll.total }})
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-grid-4col">
+    {% for product in products %}
+      <div class="product-card" onclick="if(!event.target.closest('.wishlist-btn')) window.location.href='{% url 'storefront:product_detail' product.slug %}'">
+        <div class="product-card-img-wrap" style="aspect-ratio: 1/1;">
+          <a href="{% url 'storefront:product_detail' product.slug %}">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+          </a>
+          <span class="product-badge">{{ product.badge|default:"Artisan Accent" }}</span>
+          <button class="wishlist-btn" title="Add to Project List" onclick="event.stopPropagation(); toggleWishlist(this, {{ product.id }})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="product-card-info">
+          <span class="product-card-collection">{{ product.collection }}</span>
+          <a href="{% url 'storefront:product_detail' product.slug %}" class="product-card-name">{{ product.name }}</a>
+          <span class="product-card-meta">{{ product.construction }} • {{ product.material }}</span>
+          <div class="product-card-price">${{ product.price_from|floatformat:2 }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

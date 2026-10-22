@@ -1,0 +1,51 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_content.meta_title|default:"Contract & Hospitality Rugs | AZI HOME" }}{% endblock %}
+
+{% block content %}
+<section style="background:#1f1e1d; color:#ffffff; padding:90px 32px; text-align:center;">
+  <div style="max-width:800px; margin:0 auto;">
+    <span style="font-size:0.75rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--color-accent-clay); font-weight:700;">
+      {{ page_content.eyebrow|default:"COMMERCIAL & HOSPITALITY SPECIFICATIONS" }}
+    </span>
+    <h1 style="font-family:var(--font-serif); font-size:clamp(2.4rem, 4.5vw, 3.8rem); font-weight:400; margin:16px 0 20px;">
+      {{ page_content.title|default:"AZI HOME Contract" }}
+    </h1>
+    <p style="font-size:1.1rem; line-height:1.7; color:rgba(255,255,255,0.85); margin-bottom:32px;">
+      {{ page_content.subtitle|default:"Engineered for demanding hospitality environments, boutique resorts, and commercial developments without compromising bespoke artisan beauty." }}
+    </p>
+    <a href="{{ page_content.cta_primary_url|default:'/become-a-partner/' }}" class="btn-luxury-primary">
+      {{ page_content.cta_primary_text|default:"Consult With Contract Team" }}
+    </a>
+  </div>
+</section>
+
+<div class="section-wrapper" style="padding-top:64px;">
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:64px; align-items:center; margin-bottom:64px;">
+    <div>
+      <h2 style="font-family:var(--font-serif); font-size:2rem; margin-bottom:16px; color:var(--color-ink);">
+        {{ page_content.section_heading|default:"Engineered For Heavy Foot Traffic" }}
+      </h2>
+      {% if page_content.body %}
+        <div style="font-size:0.95rem; line-height:1.7; color:var(--color-text-muted); margin-bottom:20px; white-space: pre-line;">
+          {{ page_content.body }}
+        </div>
+      {% else %}
+        <p style="font-size:0.95rem; line-height:1.7; color:var(--color-text-muted); margin-bottom:20px;">
+          Our contract collections combine high-tensile wool blends, solution-dyed performance fibers, and rigorous flammability rating compliance (Class 1 radiant panel testing).
+        </p>
+        <ul class="trade-benefits-list">
+          <li>Custom tufted and axminster weaves</li>
+          <li>Bespoke strike-offs in 10 business days</li>
+          <li>Comprehensive stain-resistant protective coatings</li>
+          <li>Sustainable recycled fiber options</li>
+        </ul>
+      {% endif %}
+    </div>
+    <div style="overflow:hidden; border:1px solid var(--color-border); border-radius:4px;">
+      <img src="{{ page_content.hero_image|default:'https://www.jaipurliving.com/media/wysiwyg/d08557a2-caf5-420e-95d8-8a828744e85c_2.png' }}" alt="{{ page_content.title|default:'Contract Hospitality Rugs' }}" style="width:100%; height:auto;">
+    </div>
+  </div>
+</div>
+{% endblock %}

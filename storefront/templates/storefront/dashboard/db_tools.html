@@ -1,0 +1,102 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Database Management & System Utilities{% endblock %}
+{% block page_subtitle %}Direct database controls, JSON catalog backups, and automated data seeding{% endblock %}
+
+{% block content %}
+
+<!-- DATABASE OVERVIEW STATS -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-header">
+      <span class="metric-label">Product Records</span>
+      <div class="metric-icon"><i class="ri-archive-line"></i></div>
+    </div>
+    <div class="metric-value">{{ products_count }}</div>
+    <div class="metric-sub">Active catalog products</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <span class="metric-label">Size Variant Records</span>
+      <div class="metric-icon"><i class="ri-shape-line"></i></div>
+    </div>
+    <div class="metric-value">{{ variants_count }}</div>
+    <div class="metric-sub">Dynamic prices & SKUs in DB</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <span class="metric-label">Categories</span>
+      <div class="metric-icon"><i class="ri-folder-line"></i></div>
+    </div>
+    <div class="metric-value">{{ categories_count }}</div>
+    <div class="metric-sub">Catalog taxons</div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px;">
+
+  <!-- 1. EXPORT CATALOG AS JSON -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title" style="font-size: 18px;">
+        <i class="ri-download-cloud-line" style="color: var(--gold-primary);"></i>
+        <span>1. Export Database Catalog (JSON)</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.6; margin-bottom: 20px;">
+        Download the entire current product catalog, including all sizes, colors, dynamic prices, and SKUs as structured JSON for backups or external integrations.
+      </p>
+      <a href="{% url 'storefront:dashboard_export_json' %}" class="btn btn-gold" style="width: 100%; justify-content: center; padding: 11px;">
+        <i class="ri-download-line"></i>
+        <span>Download Catalog JSON</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 2. RE-SEED CATALOG FROM SCRATCH -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title" style="font-size: 18px;">
+        <i class="ri-refresh-line" style="color: var(--accent-warning);"></i>
+        <span>2. Re-Seed Authentic Catalog</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.6; margin-bottom: 20px;">
+        Reset or re-populate the database with the full authentic AZI HOME catalog collections (Tierzah, Salinas, Cirque, Mythos, Polaris, etc.) and complete size matrices.
+      </p>
+      <form method="POST" action="{% url 'storefront:dashboard_reseed' %}" onsubmit="return confirm('Are you sure you want to re-seed the catalog? This will refresh all standard collections.');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 11px; border-color: rgba(245, 158, 11, 0.4); color: #FBBF24;">
+          <i class="ri-database-2-line"></i>
+          <span>Re-Seed Authentic Catalog Data</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. DJANGO CORE ADMIN -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title" style="font-size: 18px;">
+        <i class="ri-shield-keyhole-line" style="color: var(--gold-primary);"></i>
+        <span>3. Django Core Admin Panel</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.6; margin-bottom: 20px;">
+        Access low-level Django ORM tables, user permissions, session logs, and direct database object inspection at the core administrative level.
+      </p>
+      <a href="/admin/" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 11px;">
+        <i class="ri-external-link-line"></i>
+        <span>Open /admin/ Console</span>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

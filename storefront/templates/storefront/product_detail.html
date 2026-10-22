@@ -1,0 +1,906 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} | AZI HOME{% endblock %}
+
+{% block content %}
+<div class="pdp-page-wrapper">
+  
+  <!-- Breadcrumb -->
+  <nav class="pdp-breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'storefront:index' %}">Home</a>
+    <span class="pdp-breadcrumb-separator">/</span>
+    <a href="{% url 'storefront:rugs' %}">Rugs</a>
+    <span class="pdp-breadcrumb-separator">/</span>
+    <a href="{% url 'storefront:rugs' %}?collection={{ product.collection }}">{{ product.collection }}</a>
+    <span class="pdp-breadcrumb-separator">/</span>
+    <span class="pdp-breadcrumb-current">{{ product.name }}</span>
+  </nav>
+
+  <!-- Main PDP Grid -->
+  <div class="pdp-layout-grid">
+    
+    <!-- LEFT: High-Fidelity Gallery -->
+    <div class="pdp-gallery-container">
+      
+      <!-- Vertical Thumbnails Strip -->
+      <div class="pdp-thumb-strip" id="pdpThumbStrip">
+        {% if gallery_images %}
+          {% for img in gallery_images %}
+            <button type="button" class="pdp-thumb-btn {% if forloop.first %}active{% endif %}" 
+                    data-img="{{ img.image_url }}"
+                    data-alt="{{ img.alt_text|default:product.name }}"
+                    onclick="selectPdpImage(this, '{{ img.image_url }}')">
+              <img src="{{ img.image_url }}" alt="{{ img.alt_text|default:product.name }}" loading="lazy">
+            </button>
+          {% endfor %}
+        {% else %}
+          <button type="button" class="pdp-thumb-btn active" onclick="selectPdpImage(this, '{{ product.image_url }}')">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+          </button>
+          {% if product.secondary_image_url %}
+            <button type="button" class="pdp-thumb-btn" onclick="selectPdpImage(this, '{{ product.secondary_image_url }}')">
+              <img src="{{ product.secondary_image_url }}" alt="{{ product.name }} Texture">
+            </button>
+          {% endif %}
+          {% if product.lifestyle_image_url %}
+            <button type="button" class="pdp-thumb-btn" onclick="selectPdpImage(this, '{{ product.lifestyle_image_url }}')">
+              <img src="{{ product.lifestyle_image_url }}" alt="{{ product.name }} Room Scene">
+            </button>
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <!-- Main Stage Viewport -->
+      <div class="pdp-stage-wrapper">
+        {% if product.badge %}
+          <span class="pdp-stage-badge">{{ product.badge }}</span>
+        {% else %}
+          <span class="pdp-stage-badge">{{ product.construction }}</span>
+        {% endif %}
+
+        <button type="button" class="pdp-stage-expand-btn" title="View Fullscreen" onclick="openLightbox()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+          </svg>
+        </button>
+
+        <div class="pdp-stage-image-container" id="pdpZoomContainer" onclick="openLightbox()">
+          <img id="mainPdpImage" 
+               class="pdp-stage-image" 
+               src="{% if gallery_images %}{{ gallery_images.0.image_url }}{% else %}{{ product.image_url }}{% endif %}" 
+               alt="{{ product.name }}">
+        </div>
+
+        <!-- Stage Bottom Action Bar -->
+        <div class="pdp-stage-actions-bar">
+          <button type="button" class="pdp-action-tool-btn" onclick="openRoomVisualizer()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            View In Your Room
+          </button>
+          <button type="button" class="pdp-action-tool-btn" onclick="openLightbox()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <line x1="11" y1="8" x2="11" y2="14"/>
+              <line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+            Zoom & Pan Details
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Product Information & Controls -->
+    <div class="pdp-info-panel">
+      
+      <!-- Collection Link & Admin Action -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <a href="{% url 'storefront:rugs' %}?collection={{ product.collection }}" class="pdp-collection-tag" style="margin-bottom:0;">
+          {{ product.collection }} Collection
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </a>
+        <a href="{% url 'storefront:dashboard_product_variants' product.id %}" target="_blank" title="Edit dynamic sizes & prices in Power Admin" style="font-size: 11px; font-weight: 700; color: #8c4e41; background: rgba(140, 78, 65, 0.08); border: 1px solid rgba(140, 78, 65, 0.25); padding: 4px 10px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+          <span>⚡ Edit Sizes & Prices</span>
+        </a>
+      </div>
+
+      <!-- Title & Subtitle -->
+      <h1 class="pdp-product-title">{{ product.name }}</h1>
+      <div class="pdp-product-subtitle">Traditional Floral Trellis & Medallion Border | Hand Knotted Wool Rug</div>
+
+      <!-- SKU & Stock Availability -->
+      <div class="pdp-sku-stock-row">
+        <div>
+          SKU: <strong id="pdpDisplaySku">{{ default_size_option.sku }}</strong>
+        </div>
+        <div class="pdp-stock-status">
+          <span class="pdp-stock-dot"></span>
+          <span>In Stock — Ships in 2–4 Business Days</span>
+        </div>
+      </div>
+
+      <!-- Pricing Display -->
+      <div class="pdp-pricing-section">
+        <div class="pdp-price-wrap">
+          <span class="pdp-active-price" id="pdpDisplayPrice">${{ default_size_option.price|floatformat:2 }}</span>
+          <span class="pdp-msrp-price" id="pdpDisplayMsrp">${{ default_size_option.msrp|floatformat:2 }}</span>
+          <span class="pdp-savings-badge" id="pdpDisplaySavings">{{ default_size_option.savings }}</span>
+        </div>
+        <div style="font-size:0.75rem; color:var(--color-text-muted);">
+          Starting from ${{ size_options.0.price|floatformat:2 }} for {{ size_options.0.size }}. Free standard delivery on orders over $500.
+        </div>
+      </div>
+
+      <!-- Trade Pricing Banner -->
+      <div class="pdp-trade-callout-box">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8c4e41" stroke-width="2" style="flex-shrink:0; margin-top:2px;">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        <div>
+          <strong>Interior Designers & Trade Partners:</strong> Exclusive wholesale project pricing and tax-exempt ordering available.
+          <a href="javascript:void(0)" onclick="window.openTradeModal()">Sign In or Apply for Trade Account &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Colorway Selector -->
+      {% if unique_colors %}
+        <div class="pdp-swatch-section">
+          <div class="pdp-option-header">
+            <span>Colorway:</span>
+            <span class="pdp-option-value-label" id="pdpSelectedColorName">{{ unique_colors.0.name }}</span>
+          </div>
+          <div class="pdp-colorway-grid">
+            {% for c in unique_colors %}
+              <div class="pdp-colorway-card {% if forloop.first %}active{% endif %}" 
+                   onclick="changePdpColorway(this, '{{ c.name|escapejs }}', '{{ c.image }}', '{{ c.code }}')">
+                <div class="pdp-colorway-thumb">
+                  <img src="{{ c.image }}" alt="{{ c.name }}">
+                </div>
+                <div class="pdp-colorway-text">
+                  <div class="pdp-colorway-code">{{ c.code|default:product.catalog_code }}</div>
+                  <div class="pdp-colorway-name">{{ c.name|truncatechars:24 }}</div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Size Selector -->
+      <div class="pdp-sizes-section">
+        <div class="pdp-option-header">
+          <span>Select Size:</span>
+          <a href="javascript:void(0)" onclick="openSizeGuideModal()" style="font-size:0.72rem; color:var(--color-ink); text-decoration:underline;">
+            📐 Rug Size Guide
+          </a>
+        </div>
+        
+        <div class="pdp-sizes-grid" id="pdpSizeGrid">
+          {% for s in size_options %}
+            <button type="button" 
+                    class="pdp-size-pill {% if s.size == default_size_option.size %}active{% endif %}"
+                    data-size="{{ s.size }}"
+                    onclick="selectPdpSize(this, '{{ s.size|escapejs }}')">
+              <span class="pdp-size-title">{{ s.size }}</span>
+              <span class="pdp-size-subprice">${{ s.price|floatformat:2 }}</span>
+            </button>
+          {% endfor %}
+        </div>
+
+        <!-- Custom Sizing Callout -->
+        <div class="pdp-custom-size-bar">
+          <span>Need custom dimensions, runner lengths, or bespoke room shapes?</span>
+          <a href="javascript:void(0)" class="pdp-custom-size-btn" onclick="openCustomQuoteModal()">Request Custom Quote</a>
+        </div>
+      </div>
+
+      <!-- Add-on Rug Protection (Cross-sell Box) -->
+      <div class="pdp-crosssell-box">
+        <div class="pdp-crosssell-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          Complete Your Rug Purchase
+        </div>
+        <p style="font-size:0.75rem; color:var(--color-text-muted); margin-bottom:12px;">
+          Hand-knotted rugs require a dedicated pad to prevent movement, preserve hand-spun fibers, and provide luxurious underfoot density.
+        </p>
+
+        <div class="pdp-crosssell-item">
+          <label class="pdp-crosssell-label" for="padExtraPlush">
+            <input type="checkbox" id="padExtraPlush" onchange="toggleRugPad(this, 'Extra Plush Dual-Surface Pad RP01', 140.00)">
+            <div>
+              <strong>Extra Plush Dual-Surface Pad (RP01)</strong>
+              <div style="font-size:0.7rem; color:var(--color-text-light);">1/4" recycled felt & natural rubber grip</div>
+            </div>
+          </label>
+          <span class="pdp-crosssell-price">+$140.00</span>
+        </div>
+
+        <div class="pdp-crosssell-item">
+          <label class="pdp-crosssell-label" for="padLowProfile">
+            <input type="checkbox" id="padLowProfile" onchange="toggleRugPad(this, 'Low Profile Ultra-Grip Pad RP02', 95.00)">
+            <div>
+              <strong>Low-Profile Ultra-Grip Pad (RP02)</strong>
+              <div style="font-size:0.7rem; color:var(--color-text-light);">1/8" slimline polymer mesh for door clearance</div>
+            </div>
+          </label>
+          <span class="pdp-crosssell-price">+$95.00</span>
+        </div>
+      </div>
+
+      <!-- Purchase Actions & CTAs -->
+      <div class="pdp-cta-group">
+        <div class="pdp-qty-stepper">
+          <button type="button" class="pdp-qty-btn" onclick="adjustPdpQty(-1)">−</button>
+          <span class="pdp-qty-display" id="pdpQtyDisplay">1</span>
+          <button type="button" class="pdp-qty-btn" onclick="adjustPdpQty(1)">+</button>
+        </div>
+        <button type="button" class="pdp-add-to-bag-btn" id="pdpAddToCartBtn" onclick="handlePdpAddToCart()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          Add to Shopping Bag
+        </button>
+      </div>
+
+      <!-- Secondary CTAs -->
+      <div class="pdp-secondary-actions-row">
+        <button type="button" class="pdp-sub-cta" onclick="toggleWishlist(this, {{ product.id }})">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          Add to Project List
+        </button>
+        <button type="button" class="pdp-sub-cta" onclick="openTearSheetModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Download Tear Sheet
+        </button>
+      </div>
+
+      <!-- Trust Badges Row -->
+      <div class="pdp-trust-signals">
+        <div class="pdp-trust-item">
+          <span class="pdp-trust-icon">🚚</span>
+          <strong>Complimentary Shipping</strong>
+          <span>Orders Over $500</span>
+        </div>
+        <div class="pdp-trust-item">
+          <span class="pdp-trust-icon">🔄</span>
+          <strong>60-Day Easy Returns</strong>
+          <span>Risk-Free In Home</span>
+        </div>
+        <div class="pdp-trust-item">
+          <span class="pdp-trust-icon">✨</span>
+          <strong>Artisan Masterwoven</strong>
+          <span>Handmade in India</span>
+        </div>
+      </div>
+
+      <!-- Accordion Specifications -->
+      <div class="pdp-accordions-group">
+        
+        <!-- Tab 1: Details & Specs -->
+        <div class="pdp-accordion-item active">
+          <button type="button" class="pdp-accordion-header" onclick="toggleAccordion(this)">
+            <span>Details & Specifications</span>
+            <span class="pdp-accordion-icon">+</span>
+          </button>
+          <div class="pdp-accordion-content">
+            <p style="margin-bottom:16px;">{{ product.description }}</p>
+            <table class="pdp-spec-table">
+              <tbody>
+                <tr>
+                  <th>Collection</th>
+                  <td>{{ product.collection }}</td>
+                </tr>
+                <tr>
+                  <th>Design / Catalog Code</th>
+                  <td>{{ product.catalog_code }} (Floral Trellis & Border)</td>
+                </tr>
+                <tr>
+                  <th>Construction</th>
+                  <td>{{ product.construction }}</td>
+                </tr>
+                <tr>
+                  <th>Fiber Content</th>
+                  <td>{{ product.material }}</td>
+                </tr>
+                <tr>
+                  <th>Pile Height</th>
+                  <td>{{ product.pile_height }} (Medium-High Profile)</td>
+                </tr>
+                <tr>
+                  <th>Backing</th>
+                  <td>No Backing (Rug Pad Recommended)</td>
+                </tr>
+                <tr>
+                  <th>Origin</th>
+                  <td>Handcrafted in {{ product.origin }}</td>
+                </tr>
+                <tr>
+                  <th>Knot Density</th>
+                  <td>Approx. 64 knots per square inch</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 2: Shipping & White Glove Delivery -->
+        <div class="pdp-accordion-item">
+          <button type="button" class="pdp-accordion-header" onclick="toggleAccordion(this)">
+            <span>Shipping & White-Glove Delivery</span>
+            <span class="pdp-accordion-icon">+</span>
+          </button>
+          <div class="pdp-accordion-content">
+            <p style="margin-bottom:12px;">
+              <strong>Standard Courier Shipping:</strong> Swatches and rug sizes 8'x10' and under ship via FedEx Ground or UPS Freight within 2 to 4 business days. Tracking details are emailed immediately upon dispatch.
+            </p>
+            <p style="margin-bottom:12px;">
+              <strong>White-Glove LTL Delivery:</strong> Oversized rugs measuring 9'x12', 10'x14', or larger ship via specialized freight carrier. A concierge representative will call to schedule a convenient delivery appointment.
+            </p>
+            <p>
+              <strong>Returns Policy:</strong> We offer a 60-day return guarantee on standard rugs in original condition. Samples & swatches are fully refundable upon return.
+            </p>
+          </div>
+        </div>
+
+        <!-- Tab 3: Care, Cleaning & Fiber Behavior -->
+        <div class="pdp-accordion-item">
+          <button type="button" class="pdp-accordion-header" onclick="toggleAccordion(this)">
+            <span>Care & Cleaning Instructions</span>
+            <span class="pdp-accordion-icon">+</span>
+          </button>
+          <div class="pdp-accordion-content">
+            {% if product.care_instructions %}
+              <div style="background: rgba(184, 150, 110, 0.08); border-left: 3px solid #8A734C; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 0.88rem; line-height: 1.6; color: var(--color-ink);">
+                <strong style="display:block; margin-bottom:4px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:#8A734C;">Specific Maintenance Protocol:</strong>
+                {{ product.care_instructions }}
+              </div>
+            {% endif %}
+            <p style="margin-bottom:12px;">
+              <strong>Vacuuming:</strong> Vacuum regularly using suction only. Do not use a rotating beater brush or high power setting, as this can pull delicate wool fibers.
+            </p>
+            <p style="margin-bottom:12px;">
+              <strong>Natural Wool Shedding:</strong> Natural wool hand-knotted rugs will shed loose fibers for the first 3–6 months. This is a normal hallmark of pure wool craftsmanship and will diminish naturally.
+            </p>
+            <p style="margin-bottom:12px;">
+              <strong>Spill Cleanup:</strong> Blot spills immediately with a clean, un-dyed cloth or paper towel. Never rub vigorously. For set-in stains, use lukewarm water and mild wool-safe detergent.
+            </p>
+            <p>
+              <strong>Professional Cleaning:</strong> We recommend professional in-plant immersion rug cleaning every 2–3 years to preserve natural wool lanolin oils.
+            </p>
+          </div>
+        </div>
+
+        <!-- Tab 4: Custom Sizing & Trade Orders -->
+        <div class="pdp-accordion-item">
+          <button type="button" class="pdp-accordion-header" onclick="toggleAccordion(this)">
+            <span>Custom Sizing & Bespoke Studio</span>
+            <span class="pdp-accordion-icon">+</span>
+          </button>
+          <div class="pdp-accordion-content">
+            <p style="margin-bottom:12px;">
+              AZI HOME's bespoke studio can craft the Tierzah design in exact custom dimensions to match your project's architectural footprints.
+            </p>
+            <ul style="padding-left:18px; list-style:disc; margin-bottom:12px;">
+              <li>Custom widths up to 24 feet and unlimited runner lengths</li>
+              <li>Custom shapes: Round, oval, square, and cut-out configurations</li>
+              <li>Standard custom lead time: 16 to 22 weeks from strike-off approval</li>
+            </ul>
+            <a href="javascript:void(0)" onclick="openCustomQuoteModal()" style="font-weight:700; text-decoration:underline; color:var(--color-ink);">
+              Submit a Custom Dimension Request &rarr;
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- HERITAGE CRAFTSMANSHIP SHOWCASE BANNER -->
+  <div class="pdp-craft-banner">
+    <div class="pdp-craft-container">
+      <div>
+        <span style="font-size:0.74rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-clay); font-weight:700;">
+          Generations of Hand-Knotted Artistry
+        </span>
+        <h2 style="font-family:var(--font-serif); font-size:2rem; font-weight:400; margin:12px 0 16px; color:var(--color-ink);">
+          Woven Knot by Knot in Rajasthan
+        </h2>
+        <p style="font-size:0.92rem; line-height:1.8; color:var(--color-text-muted); margin-bottom:20px;">
+          The Tierzah rug represents the pinnacle of traditional knotting heritage. Master artisans in rural Indian communities knot each wool yarn individually across vertical looms, weaving over 60 knots per square inch. With its washed patina and lustrous natural dyes, Tierzah develops an heirloom beauty that matures with every passing generation.
+        </p>
+        <div style="display:flex; gap:32px;">
+          <div>
+            <div style="font-size:1.8rem; font-family:var(--font-serif); color:var(--color-ink);">100%</div>
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--color-text-light);">Pure Natural Wool</div>
+          </div>
+          <div>
+            <div style="font-size:1.8rem; font-family:var(--font-serif); color:var(--color-ink);">64+</div>
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--color-text-light);">Knots / Sq Inch</div>
+          </div>
+          <div>
+            <div style="font-size:1.8rem; font-family:var(--font-serif); color:var(--color-ink);">180+</div>
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--color-text-light);">Days of Loom Weaving</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <img src="https://www.jaipurliving.com/media/catalog/product/T/R/TRZ05_LS.jpg" 
+             alt="Tierzah in Luxury Setting" 
+             style="box-shadow:var(--shadow-floating); border:8px solid #ffffff;">
+      </div>
+    </div>
+  </div>
+
+  <!-- RELATED PRODUCTS -->
+  {% if related_products %}
+    <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--color-border);">
+      <div style="text-align:center; margin-bottom:36px;">
+        <span style="font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--color-accent-clay); font-weight:700;">Curated Complements</span>
+        <h3 style="font-family:var(--font-serif); font-size:2rem; font-weight:400; color:var(--color-ink); margin-top:6px;">You May Also Appreciate</h3>
+      </div>
+      <div class="product-grid-4col">
+        {% for rel in related_products %}
+          <div class="product-card" onclick="if(!event.target.closest('.wishlist-btn')) window.location.href='{% url 'storefront:product_detail' rel.slug %}'">
+            <div class="product-card-img-wrap">
+              <a href="{% url 'storefront:product_detail' rel.slug %}">
+                <img src="{{ rel.image_url }}" alt="{{ rel.name }}">
+              </a>
+            </div>
+            <div class="product-card-info">
+              <span class="product-card-collection">{{ rel.collection }}</span>
+              <a href="{% url 'storefront:product_detail' rel.slug %}" class="product-card-name">{{ rel.name }}</a>
+              <div class="product-card-price">From ${{ rel.price_from|floatformat:2 }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- ==========================================================================
+     INTERACTIVE MODALS
+     ========================================================================== -->
+
+<!-- 1. FULLSCREEN LIGHTBOX MODAL -->
+<div class="pdp-lightbox-overlay" id="pdpLightbox" onclick="if(event.target === this) closeLightbox()">
+  <span class="pdp-lightbox-close" onclick="closeLightbox()">&times;</span>
+  <img id="lightboxActiveImg" class="pdp-lightbox-img" src="" alt="{{ product.name }} Fullscreen">
+</div>
+
+<!-- 2. AR / ROOM VISUALIZER MODAL -->
+<div class="trade-modal-overlay" id="roomVisualizerModal" style="display:none;" onclick="if(event.target === this) closeRoomVisualizer()">
+  <div class="trade-modal-card" style="max-width:880px; padding:32px;">
+    <button class="trade-modal-close" onclick="closeRoomVisualizer()">&times;</button>
+    <div style="text-align:center; margin-bottom:20px;">
+      <span style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-clay); font-weight:700;">Interactive Room Styler</span>
+      <h3 style="font-family:var(--font-serif); font-size:1.8rem; margin:6px 0;">See {{ product.name }} In Your Space</h3>
+      <p style="font-size:0.84rem; color:var(--color-text-muted);">Switch between interior architectural settings to preview color harmony and rug proportions.</p>
+    </div>
+
+    <!-- Room Mockup Stage -->
+    <div style="position:relative; width:100%; height:440px; border-radius:4px; overflow:hidden; background:#111; margin-bottom:20px;">
+      <img id="visRoomBackground" 
+           src="https://www.jaipurliving.com/media/catalog/product/T/R/TRZ05_LS.jpg" 
+           alt="Styled Room" 
+           style="width:100%; height:100%; object-fit:cover; opacity:0.95;">
+      
+      <!-- Room Overlay Badge -->
+      <div style="position:absolute; bottom:16px; left:16px; background:rgba(255,255,255,0.92); padding:8px 14px; border-radius:3px; font-size:0.78rem; font-weight:600;">
+        Viewing: <span id="visCurrentSetting">Modern Luxury Living Room (8'X10')</span>
+      </div>
+    </div>
+
+    <!-- Room Switchers -->
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button type="button" class="btn-luxury-outline" style="font-size:0.75rem; padding:10px 16px; background:var(--color-ink); color:#fff;" onclick="switchVisRoom('living', this)">
+        Living Room
+      </button>
+      <button type="button" class="btn-luxury-outline" style="font-size:0.75rem; padding:10px 16px;" onclick="switchVisRoom('dining', this)">
+        Formal Dining
+      </button>
+      <button type="button" class="btn-luxury-outline" style="font-size:0.75rem; padding:10px 16px;" onclick="switchVisRoom('bedroom', this)">
+        Master Suite
+      </button>
+      <button type="button" class="btn-luxury-outline" style="font-size:0.75rem; padding:10px 16px; border-style:dashed;" onclick="alert('Photo upload simulator: You can upload your interior photo in trade designer accounts!')">
+        📷 Upload Room Photo
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. RUG SIZE GUIDE MODAL -->
+<div class="trade-modal-overlay" id="sizeGuideModal" style="display:none;" onclick="if(event.target === this) closeSizeGuideModal()">
+  <div class="trade-modal-card" style="max-width:760px; padding:36px;">
+    <button class="trade-modal-close" onclick="closeSizeGuideModal()">&times;</button>
+    <div style="text-align:center; margin-bottom:24px;">
+      <span style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-clay); font-weight:700;">Placement Guidelines</span>
+      <h3 style="font-family:var(--font-serif); font-size:1.8rem; margin:6px 0;">Rug Sizing & Proportions Guide</h3>
+      <p style="font-size:0.85rem; color:var(--color-text-muted);">Finding the ideal footprint ensures visual grounding and comfortable foot traffic.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; text-align:center;">
+      <div style="border:1px solid var(--color-border); padding:16px; border-radius:4px; background:#faf9f7;">
+        <div style="font-weight:700; font-size:1rem; margin-bottom:6px;">6' x 9'</div>
+        <div style="font-size:0.75rem; color:var(--color-accent-clay); font-weight:600; margin-bottom:8px;">Compact Seating</div>
+        <p style="font-size:0.76rem; color:var(--color-text-muted); line-height:1.5;">Front legs of sofa placed on rug. Perfect for urban living apartments and 4-seat breakfast nooks.</p>
+      </div>
+
+      <div style="border:2px solid var(--color-ink); padding:16px; border-radius:4px; background:#ffffff;">
+        <div style="font-weight:700; font-size:1rem; margin-bottom:6px;">8' x 10' (Most Popular)</div>
+        <div style="font-size:0.75rem; color:var(--color-accent-clay); font-weight:600; margin-bottom:8px;">Standard Living Room</div>
+        <p style="font-size:0.76rem; color:var(--color-text-muted); line-height:1.5;">Front legs of sofa and armchairs rest comfortably on the rug. Ideal under Queen and King beds.</p>
+      </div>
+
+      <div style="border:1px solid var(--color-border); padding:16px; border-radius:4px; background:#faf9f7;">
+        <div style="font-weight:700; font-size:1rem; margin-bottom:6px;">9' x 12' & 10' x 14'</div>
+        <div style="font-size:0.75rem; color:var(--color-accent-clay); font-weight:600; margin-bottom:8px;">Grand Living & Dining</div>
+        <p style="font-size:0.76rem; color:var(--color-text-muted); line-height:1.5;">All furniture legs rest entirely on rug surface. Allows dining chairs to remain on rug when pushed back.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. PRINTABLE TEAR SHEET MODAL -->
+<div class="trade-modal-overlay" id="tearSheetModal" style="display:none;" onclick="if(event.target === this) closeTearSheetModal()">
+  <div class="trade-modal-card" style="max-width:680px; padding:36px; background:#ffffff;">
+    <button class="trade-modal-close" onclick="closeTearSheetModal()">&times;</button>
+    
+    <div id="tearSheetPrintableArea">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--color-ink); padding-bottom:14px; margin-bottom:20px;">
+        <span class="brand-wordmark" style="font-size:1.6rem;">AZI HOME</span>
+        <span style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-text-light);">PRODUCT SPECIFICATION SHEET</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:24px; align-items:start; margin-bottom:24px;">
+        <div style="border:1px solid var(--color-border); padding:10px; text-align:center;">
+          <img id="tearSheetImg" src="{% if gallery_images %}{{ gallery_images.0.image_url }}{% else %}{{ product.image_url }}{% endif %}" alt="{{ product.name }}" style="max-height:260px; margin:0 auto; object-fit:contain;">
+        </div>
+        <div>
+          <h2 style="font-family:var(--font-serif); font-size:1.5rem; margin-bottom:6px;">{{ product.name }}</h2>
+          <div style="font-size:0.8rem; color:var(--color-accent-clay); font-weight:700; margin-bottom:12px;">{{ product.collection }} Collection</div>
+          <p style="font-size:0.78rem; color:var(--color-text-muted); line-height:1.6; margin-bottom:14px;">{{ product.description|truncatechars:180 }}</p>
+          
+          <table class="pdp-spec-table" style="font-size:0.75rem;">
+            <tbody>
+              <tr><th style="padding:4px 0;">Item Code:</th><td id="tsSku">TRZ05-8X10</td></tr>
+              <tr><th style="padding:4px 0;">Construction:</th><td>{{ product.construction }}</td></tr>
+              <tr><th style="padding:4px 0;">Material:</th><td>{{ product.material }}</td></tr>
+              <tr><th style="padding:4px 0;">Pile Height:</th><td>{{ product.pile_height }}</td></tr>
+              <tr><th style="padding:4px 0;">Origin:</th><td>{{ product.origin }}</td></tr>
+              <tr><th style="padding:4px 0;">Selected Size:</th><td id="tsSize">8'X10'</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="background:#faf8f5; border:1px solid #ebd9c8; padding:12px; font-size:0.74rem; color:var(--color-text-muted); text-align:center; margin-bottom:20px;">
+        AZI HOME Inc. | trade@azi-home.com | azi-home.com
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; justify-content:flex-end;">
+      <button class="btn-luxury-outline" style="padding:10px 18px; font-size:0.75rem;" onclick="closeTearSheetModal()">Close</button>
+      <button class="btn-luxury-dark" style="padding:10px 24px; font-size:0.75rem;" onclick="window.print()">Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. CUSTOM QUOTE MODAL -->
+<div class="trade-modal-overlay" id="customQuoteModal" style="display:none;" onclick="if(event.target === this) closeCustomQuoteModal()">
+  <div class="trade-modal-card" style="max-width:600px; padding:32px;">
+    <button class="trade-modal-close" onclick="closeCustomQuoteModal()">&times;</button>
+    <div style="text-align:center; margin-bottom:20px;">
+      <span style="font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-clay); font-weight:700;">Bespoke Concierge</span>
+      <h3 style="font-family:var(--font-serif); font-size:1.7rem; margin:6px 0;">Request Custom Size</h3>
+      <p style="font-size:0.82rem; color:var(--color-text-muted);">Enter your target room measurements for {{ product.name }}. Our bespoke team will reply with pricing and render lead times within 24 hours.</p>
+    </div>
+
+    <form onsubmit="submitCustomQuote(event)">
+      <div class="form-grid-2col" style="margin-bottom:12px;">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" class="form-control" required placeholder="Jane Designer">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" class="form-control" required placeholder="jane@studio.com">
+        </div>
+      </div>
+      <div class="form-grid-2col" style="margin-bottom:12px;">
+        <div class="form-group">
+          <label class="form-label">Custom Width (e.g. 11'4") *</label>
+          <input type="text" class="form-control" required placeholder="11'4&quot;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Custom Length (e.g. 16'8") *</label>
+          <input type="text" class="form-control" required placeholder="16'8&quot;">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Project Details / Special Requirements</label>
+        <textarea class="form-control" rows="3" placeholder="Dining room placement, cut-out for fireplace hearth, etc."></textarea>
+      </div>
+      <button type="submit" class="btn-luxury-dark" style="width:100%; padding:14px 0;">Submit Bespoke Request</button>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     CLIENT JAVASCRIPT LOGIC
+     ========================================================================== -->
+<script>
+  const PDP_PRODUCT_ID = {{ product.id }};
+  const BASE_CATALOG_CODE = "{{ product.catalog_code }}";
+
+  // Dynamic variants directly from database
+  const VARIANTS_FROM_DB = {{ db_variants_json|safe }};
+
+  let pdpCurrentSize = "{{ default_size_option.size|default:'8\'X10\''|escapejs }}";
+  let pdpCurrentColor = "{{ unique_colors.0.name|default:'Default'|escapejs }}";
+  let pdpCurrentColorCode = BASE_CATALOG_CODE;
+  let pdpQuantity = 1;
+  let activeRugPad = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Check initial active size from rendered pill
+    const initialActiveSizeBtn = document.querySelector('.pdp-size-pill.active');
+    if (initialActiveSizeBtn) {
+      pdpCurrentSize = initialActiveSizeBtn.getAttribute('data-size');
+    }
+    updateSizePillSubprices();
+    updatePricingAndSku();
+    initZoomHover();
+  });
+
+  // Switch gallery thumbnail
+  function selectPdpImage(btn, imgUrl) {
+    document.querySelectorAll('.pdp-thumb-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const stageImg = document.getElementById('mainPdpImage');
+    if (stageImg) stageImg.src = imgUrl;
+    const tsImg = document.getElementById('tearSheetImg');
+    if (tsImg) tsImg.src = imgUrl;
+  }
+
+  // Switch size
+  function selectPdpSize(btn, size) {
+    document.querySelectorAll('.pdp-size-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    pdpCurrentSize = size;
+    updatePricingAndSku();
+  }
+
+  // Switch colorway
+  function changePdpColorway(card, colorName, imgUrl, code) {
+    document.querySelectorAll('.pdp-colorway-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    pdpCurrentColor = colorName;
+    pdpCurrentColorCode = code || BASE_CATALOG_CODE;
+    document.getElementById('pdpSelectedColorName').textContent = colorName;
+
+    if (imgUrl && imgUrl.trim() !== '') {
+      const stageImg = document.getElementById('mainPdpImage');
+      if (stageImg) stageImg.src = imgUrl;
+      const tsImg = document.getElementById('tearSheetImg');
+      if (tsImg) tsImg.src = imgUrl;
+    }
+    updateSizePillSubprices();
+    updatePricingAndSku();
+  }
+
+  // Update size pill subprices dynamically based on database variants for active colorway
+  function updateSizePillSubprices() {
+    document.querySelectorAll('.pdp-size-pill').forEach(pill => {
+      const sz = pill.getAttribute('data-size');
+      const v = VARIANTS_FROM_DB.find(x => x.size === sz && x.color === pdpCurrentColor)
+             || VARIANTS_FROM_DB.find(x => x.size === sz);
+      if (v) {
+        const sub = pill.querySelector('.pdp-size-subprice');
+        if (sub) sub.textContent = `$${v.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      }
+    });
+  }
+
+  // Update dynamic price and SKU strictly from database records
+  function updatePricingAndSku() {
+    const matched = VARIANTS_FROM_DB.find(v => v.size === pdpCurrentSize && v.color === pdpCurrentColor)
+                 || VARIANTS_FROM_DB.find(v => v.size === pdpCurrentSize)
+                 || VARIANTS_FROM_DB[0];
+
+    if (matched) {
+      document.getElementById('pdpDisplayPrice').textContent = `$${matched.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      document.getElementById('pdpDisplayMsrp').textContent = `$${matched.msrp.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      document.getElementById('pdpDisplaySavings').textContent = `Save ${matched.savings_pct}%`;
+      document.getElementById('pdpDisplaySku').textContent = matched.sku;
+      const tsSku = document.getElementById('tsSku');
+      if (tsSku) tsSku.textContent = matched.sku;
+      const tsSize = document.getElementById('tsSize');
+      if (tsSize) tsSize.textContent = matched.size;
+    }
+  }
+
+  // Quantity Stepper
+  function adjustPdpQty(delta) {
+    pdpQuantity = Math.max(1, pdpQuantity + delta);
+    document.getElementById('pdpQtyDisplay').textContent = pdpQuantity;
+  }
+
+  // Toggle Rug Pad Add-on
+  function toggleRugPad(checkbox, padName, padPrice) {
+    if (checkbox.checked) {
+      // Uncheck the other pad
+      if (checkbox.id === 'padExtraPlush') {
+        document.getElementById('padLowProfile').checked = false;
+      } else {
+        document.getElementById('padExtraPlush').checked = false;
+      }
+      activeRugPad = { name: padName, price: padPrice };
+    } else {
+      activeRugPad = null;
+    }
+  }
+
+  // Add to Cart
+  function handlePdpAddToCart() {
+    const btn = document.getElementById('pdpAddToCartBtn');
+    btn.innerHTML = 'Adding to Bag...';
+
+    // 1. Add primary rug
+    window.addToCartDirect(PDP_PRODUCT_ID, pdpCurrentSize, pdpCurrentColor, pdpQuantity);
+
+    // 2. If rug pad is checked, add pad as secondary item
+    if (activeRugPad) {
+      setTimeout(() => {
+        fetch('/api/cart/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: PDP_PRODUCT_ID,
+            size: `${pdpCurrentSize} Custom Fit`,
+            color: activeRugPad.name,
+            quantity: 1
+          })
+        }).then(r => r.json()).then(data => {
+          if (data.cart && window.renderCartDrawer) {
+            window.renderCartDrawer(data.cart);
+          }
+        });
+      }, 300);
+    }
+
+    setTimeout(() => {
+      btn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        Add to Shopping Bag
+      `;
+    }, 1000);
+  }
+
+  // Accordion toggle
+  function toggleAccordion(headerBtn) {
+    const item = headerBtn.closest('.pdp-accordion-item');
+    item.classList.toggle('active');
+  }
+
+  // Zoom hover effect
+  function initZoomHover() {
+    const container = document.getElementById('pdpZoomContainer');
+    const img = document.getElementById('mainPdpImage');
+    if (!container || !img) return;
+
+    container.addEventListener('mousemove', (e) => {
+      const rect = container.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      img.style.transformOrigin = `${x}% ${y}%`;
+      img.style.transform = 'scale(1.85)';
+    });
+
+    container.addEventListener('mouseleave', () => {
+      img.style.transform = 'scale(1)';
+    });
+  }
+
+  // Lightbox
+  function openLightbox() {
+    const curImg = document.getElementById('mainPdpImage').src;
+    document.getElementById('lightboxActiveImg').src = curImg;
+    document.getElementById('pdpLightbox').classList.add('active');
+  }
+
+  function closeLightbox() {
+    document.getElementById('pdpLightbox').classList.remove('active');
+  }
+
+  // Room Visualizer
+  function openRoomVisualizer() {
+    document.getElementById('roomVisualizerModal').style.display = 'flex';
+  }
+
+  function closeRoomVisualizer() {
+    document.getElementById('roomVisualizerModal').style.display = 'none';
+  }
+
+  function switchVisRoom(roomType, btn) {
+    document.querySelectorAll('#roomVisualizerModal .btn-luxury-outline').forEach(b => {
+      b.style.background = 'transparent';
+      b.style.color = 'var(--color-ink)';
+    });
+    btn.style.background = 'var(--color-ink)';
+    btn.style.color = '#ffffff';
+
+    const bg = document.getElementById('visRoomBackground');
+    const label = document.getElementById('visCurrentSetting');
+
+    if (roomType === 'living') {
+      bg.src = "https://www.jaipurliving.com/media/catalog/product/T/R/TRZ05_LS.jpg";
+      label.textContent = "Modern Luxury Living Room (8'X10')";
+    } else if (roomType === 'dining') {
+      bg.src = "https://mcstaging.azi-home.com/media/tmp/product-image-media/slider/Majnun_Banner_2.jpg";
+      label.textContent = "Formal Dining Suite (9'X12')";
+    } else {
+      bg.src = "https://www.jaipurliving.com/media/wysiwyg/CMB07_RUG164911_RCT_LS020_1_.jpg";
+      label.textContent = "Primary Bedroom Retreat (8'X10')";
+    }
+  }
+
+  // Size Guide Modal
+  function openSizeGuideModal() {
+    document.getElementById('sizeGuideModal').style.display = 'flex';
+  }
+  function closeSizeGuideModal() {
+    document.getElementById('sizeGuideModal').style.display = 'none';
+  }
+
+  // Tear Sheet Modal
+  function openTearSheetModal() {
+    document.getElementById('tearSheetModal').style.display = 'flex';
+  }
+  function closeTearSheetModal() {
+    document.getElementById('tearSheetModal').style.display = 'none';
+  }
+
+  // Custom Quote Modal
+  function openCustomQuoteModal() {
+    document.getElementById('customQuoteModal').style.display = 'flex';
+  }
+  function closeCustomQuoteModal() {
+    document.getElementById('customQuoteModal').style.display = 'none';
+  }
+
+  function submitCustomQuote(e) {
+    e.preventDefault();
+    alert("Thank you! Your custom dimension inquiry for Tierzah TRZ05 has been submitted to the AZI HOME bespoke design studio. A specialist will contact you with strike-off estimates.");
+    closeCustomQuoteModal();
+  }
+</script>
+{% endblock %}

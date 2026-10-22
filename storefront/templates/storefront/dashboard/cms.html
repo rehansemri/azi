@@ -1,0 +1,495 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Website CMS & Page Content Editor{% endblock %}
+{% block page_subtitle %}Full administrative control over all live page text, headlines, hero banners, and image uploads{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ live_url }}" target="_blank" class="btn btn-secondary">
+    <i class="ri-external-link-line"></i> View Live Page: {{ current_page.page_name|default:"Website" }}
+  </a>
+  <button type="submit" form="pageCmsForm" class="btn btn-gold">
+    <i class="ri-save-line"></i> Publish Changes Live
+  </button>
+{% endblock %}
+
+{% block content %}
+
+<!-- 1. LUXURY PAGE SELECTOR TABS -->
+<div class="panel" style="margin-bottom: 24px; padding: 12px 16px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <i class="ri-pages-line" style="color: var(--gold-primary); font-size: 18px;"></i>
+      <span style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">
+        Select Page to Edit:
+      </span>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <a href="?page=home" class="btn btn-sm {% if active_page == 'home' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-home-4-line"></i> Homepage
+      </a>
+      <a href="?page=story" class="btn btn-sm {% if active_page == 'story' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-book-open-line"></i> The Story
+      </a>
+      <a href="?page=trade" class="btn btn-sm {% if active_page == 'trade' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-shake-hands-line"></i> Trade Program
+      </a>
+      <a href="?page=contract" class="btn btn-sm {% if active_page == 'contract' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-building-2-line"></i> Contract & Hospitality
+      </a>
+      <a href="?page=callaluxe" class="btn btn-sm {% if active_page == 'callaluxe' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-sparkling-line"></i> CallaLuxe Luxury
+      </a>
+      <a href="?page=rugs" class="btn btn-sm {% if active_page == 'rugs' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-shape-2-line"></i> Rugs Catalog
+      </a>
+      <a href="?page=decor" class="btn btn-sm {% if active_page == 'decor' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-layout-grid-line"></i> Decor Accents
+      </a>
+      <a href="?page=global" class="btn btn-sm {% if active_page == 'global' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-settings-4-line"></i> Global Header & Banner
+      </a>
+      <a href="?page=contact" class="btn btn-sm {% if active_page == 'contact' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-phone-line"></i> Contact & Showrooms
+      </a>
+      <a href="?page=customer_service" class="btn btn-sm {% if active_page == 'customer_service' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-customer-service-2-line"></i> Customer Service
+      </a>
+      <a href="?page=privacy" class="btn btn-sm {% if active_page == 'privacy' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-shield-check-line"></i> Privacy Policy
+      </a>
+      <a href="?page=terms" class="btn btn-sm {% if active_page == 'terms' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-file-list-3-line"></i> Terms & Conditions
+      </a>
+      <a href="?page=refund" class="btn btn-sm {% if active_page == 'refund' %}btn-gold{% else %}btn-secondary{% endif %}">
+        <i class="ri-refund-2-line"></i> Refund & Returns
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if active_page == 'global' %}
+  <!-- ========================================== -->
+  <!-- GLOBAL HEADER, BANNER & CONTACT SETTINGS   -->
+  <!-- ========================================== -->
+  <form method="POST" id="pageCmsForm">
+    {% csrf_token %}
+    <input type="hidden" name="page_key" value="global">
+    <input type="hidden" name="save_global" value="1">
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px; align-items: start;">
+      <div>
+        
+        <!-- 1. TOP ANNOUNCEMENT BANNER -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="ri-notification-3-line" style="color: var(--gold-primary);"></i>
+              <span>Top Announcement & Promo Banner (Global Site-Wide)</span>
+            </div>
+            <div class="form-check" style="margin: 0;">
+              <input type="checkbox" name="announcement_active" id="announcement_active" {% if settings.announcement_active %}checked{% endif %}>
+              <label for="announcement_active" style="cursor: pointer; font-size: 12.5px; font-weight: 600; color: #FFF;">Show Banner Live</label>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Announcement Text *</label>
+              <input type="text" name="announcement_text" class="form-control" value="{{ settings.announcement_text }}" placeholder="e.g. Complimentary White Glove Rug Delivery on All Orders Over $2,500">
+              <div class="form-hint">Displayed at the very top of all pages across the website</div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Call-to-Action Link Text</label>
+                <input type="text" name="announcement_link_text" class="form-control" value="{{ settings.announcement_link_text }}" placeholder="e.g. APPLY FOR TRADE">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Call-to-Action URL</label>
+                <input type="text" name="announcement_link_url" class="form-control" value="{{ settings.announcement_link_url }}" placeholder="e.g. /become-a-partner/">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. GLOBAL BRAND CONCIERGE & SHOWROOM -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="ri-building-line" style="color: var(--gold-primary);"></i>
+              <span>Brand Concierge, Support Desks & Showroom Info</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Concierge Phone Number</label>
+                <input type="text" name="contact_phone" class="form-control" value="{{ settings.contact_phone }}">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Customer Inquiries Email</label>
+                <input type="email" name="contact_email" class="form-control" value="{{ settings.contact_email }}">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Trade & Designer Desk Email</label>
+                <input type="email" name="trade_email" class="form-control" value="{{ settings.trade_email }}">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Flagship Showroom Address</label>
+                <input type="text" name="showroom_address" class="form-control" value="{{ settings.showroom_address }}">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT SIDEBAR -->
+      <div>
+        <div class="panel" style="position: sticky; top: 90px;">
+          <div class="panel-header">
+            <div class="panel-title" style="font-size: 16px;">
+              <i class="ri-broadcast-line" style="color: #34D399;"></i>
+              <span>Live Site Sync</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">
+              Updating this form modifies the site-wide announcement banner and footer contacts across all desktop and mobile views instantly.
+            </p>
+            <button type="submit" class="btn btn-gold" style="width: 100%; justify-content: center; padding: 12px; margin-bottom: 12px;">
+              <i class="ri-save-line"></i> Save Global Settings
+            </button>
+            <a href="{% url 'storefront:index' %}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+              <i class="ri-external-link-line"></i> View Live Homepage
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+{% else %}
+  <!-- ========================================== -->
+  <!-- INDIVIDUAL PAGE CONTENT EDITOR             -->
+  <!-- ========================================== -->
+  <form method="POST" id="pageCmsForm" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="page_key" value="{{ current_page.page_key }}">
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px; align-items: start;">
+      
+      <!-- LEFT COLUMN: CONTENT EDITORS -->
+      <div>
+
+        <!-- 1. HERO BANNER & PRIMARY HEADLINE -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="ri-layout-top-line" style="color: var(--gold-primary);"></i>
+              <span>1. Hero Section & Main Headline</span>
+            </div>
+            <span class="badge badge-gold" style="text-transform: uppercase;">{{ current_page.page_key }}</span>
+          </div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Eyebrow Tagline / Category Label</label>
+                <input type="text" name="eyebrow" class="form-control" value="{{ current_page.eyebrow }}" placeholder="e.g. A PURPOSE-DRIVEN JOURNEY" id="inputEyebrow">
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Primary Page Headline (H1) *</label>
+                <input type="text" name="title" class="form-control" value="{{ current_page.title }}" placeholder="e.g. The AZI HOME Story" required id="inputTitle">
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Introductory Subtitle / Lead Paragraph</label>
+                <textarea name="subtitle" class="form-control" rows="3" placeholder="Lead text displayed beneath headline..." id="inputSubtitle">{{ current_page.subtitle }}</textarea>
+              </div>
+
+              <!-- Hero Image Upload & URL -->
+              <div class="form-group" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+                <label class="form-label" style="color: #FFF; font-size: 13px; margin-bottom: 6px;">
+                  <i class="ri-image-add-line" style="color: var(--gold-primary); margin-right: 4px;"></i>
+                  Hero Banner Image (Upload File or Enter URL)
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px;">
+                  <div>
+                    <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                      <i class="ri-upload-cloud-line"></i> Upload From Computer:
+                    </label>
+                    <input type="file" name="hero_image_file" id="heroFileInput" accept="image/*" class="form-control" style="padding: 7px 10px; font-size: 12.5px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                      <i class="ri-link"></i> Or Image Web URL:
+                    </label>
+                    <input type="text" name="hero_image" id="heroUrlInput" class="form-control" value="{{ current_page.hero_image }}" placeholder="https://...">
+                  </div>
+                </div>
+                {% if current_page.hero_image %}
+                  <div style="font-size: 11.5px; color: var(--gold-light); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="ri-check-line"></i> Current Image: <a href="{{ current_page.hero_image }}" target="_blank" style="color: var(--gold-light); text-decoration: underline;">{{ current_page.hero_image|truncatechars:65 }}</a>
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Hero Video Upload / URL -->
+              <div class="form-group" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <label class="form-label" style="color: #FFF; font-size: 13px; margin-bottom: 6px;">
+                  <i class="ri-video-line" style="color: var(--gold-primary); margin-right: 4px;"></i>
+                  Hero Ambient Video (Upload MP4 / WebM File or Paste URL)
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px;">
+                  <div>
+                    <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                      <i class="ri-upload-cloud-line"></i> Upload Video File:
+                    </label>
+                    <input type="file" name="hero_video_file" accept="video/*" class="form-control" style="padding: 7px 10px; font-size: 12.5px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                      <i class="ri-link"></i> Or Video Web URL:
+                    </label>
+                    <input type="text" name="hero_video_url" class="form-control" value="{{ current_page.hero_video_url }}" placeholder="https://player.vimeo.com/... or /media/videos/...">
+                  </div>
+                </div>
+                {% if current_page.hero_video_url %}
+                  <div style="font-size: 11.5px; color: var(--gold-light); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="ri-play-circle-fill"></i> Current Video: <a href="{{ current_page.hero_video_url }}" target="_blank" style="color: var(--gold-light); text-decoration: underline;">{{ current_page.hero_video_url|truncatechars:65 }}</a>
+                  </div>
+                {% endif %}
+                <div class="form-hint" style="margin-top: 6px;">Looping luxury ambient background video for hero banners</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. EDITORIAL BODY & FEATURE SECTION -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="ri-file-text-line" style="color: var(--gold-primary);"></i>
+              <span>2. Editorial Narrative, Section Content & Secondary Feature Image</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Section Heading</label>
+                <input type="text" name="section_heading" class="form-control" value="{{ current_page.section_heading }}" placeholder="e.g. Founded on Dignity & Craft">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Section Subheading / Label</label>
+                <input type="text" name="section_subheading" class="form-control" value="{{ current_page.section_subheading }}" placeholder="e.g. 40,000 Artisans Across 600 Villages">
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Main Editorial Content / Paragraphs</label>
+                <textarea name="body" class="form-control" rows="6" placeholder="Main text content for this section..." style="line-height: 1.6;">{{ current_page.body }}</textarea>
+                <div class="form-hint">Line breaks and paragraphs are preserved exactly as typed on the live site.</div>
+              </div>
+
+              <!-- Secondary Image Upload & URL -->
+              <div class="form-group" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+                <label class="form-label" style="color: #FFF; font-size: 13px; margin-bottom: 6px;">
+                  <i class="ri-image-line" style="color: var(--gold-primary); margin-right: 4px;"></i>
+                  Secondary / Feature Showcase Image
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px;">
+                  <div>
+                    <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                      <i class="ri-upload-cloud-line"></i> Upload Secondary File:
+                    </label>
+                    <input type="file" name="secondary_image_file" id="secondaryFileInput" accept="image/*" class="form-control" style="padding: 7px 10px; font-size: 12.5px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                      <i class="ri-link"></i> Or Feature Image URL:
+                    </label>
+                    <input type="text" name="secondary_image" id="secondaryUrlInput" class="form-control" value="{{ current_page.secondary_image }}" placeholder="https://...">
+                  </div>
+                </div>
+                {% if current_page.secondary_image %}
+                  <div style="font-size: 11.5px; color: var(--gold-light); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="ri-check-line"></i> Current Secondary: <a href="{{ current_page.secondary_image }}" target="_blank" style="color: var(--gold-light); text-decoration: underline;">{{ current_page.secondary_image|truncatechars:65 }}</a>
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Highlight Callout / Pull Quote Statement</label>
+                <textarea name="highlight_text" class="form-control" rows="3" placeholder="e.g. “A rug isn’t just an interior object—it carries the heartbeat, dreams, and dignity of the artisan family...”">{{ current_page.highlight_text }}</textarea>
+                <div class="form-hint">Displayed in distinctive editorial typography or quote banner</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. CALL TO ACTION BUTTONS -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="ri-cursor-line" style="color: var(--gold-primary);"></i>
+              <span>3. Call to Action (CTA) Buttons & Navigation</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Primary Button Text</label>
+                <input type="text" name="cta_primary_text" class="form-control" value="{{ current_page.cta_primary_text }}" placeholder="e.g. Explore Rugs">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Primary Button Destination URL</label>
+                <input type="text" name="cta_primary_url" class="form-control" value="{{ current_page.cta_primary_url }}" placeholder="e.g. /rugs/">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Secondary Button Text</label>
+                <input type="text" name="cta_secondary_text" class="form-control" value="{{ current_page.cta_secondary_text }}" placeholder="e.g. Apply For Trade">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Secondary Button Destination URL</label>
+                <input type="text" name="cta_secondary_url" class="form-control" value="{{ current_page.cta_secondary_url }}" placeholder="e.g. /become-a-partner/">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. SEARCH ENGINE OPTIMIZATION (SEO) -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="ri-google-line" style="color: var(--gold-primary);"></i>
+              <span>4. Search Engine Optimization (SEO Metadata)</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Browser Window & Search Engine Title Tag</label>
+              <input type="text" name="meta_title" class="form-control" value="{{ current_page.meta_title }}" placeholder="e.g. The AZI HOME Story | Artisan Heritage">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Search Engine Meta Description</label>
+              <textarea name="meta_description" class="form-control" rows="2" placeholder="Brief summary displayed in Google search results...">{{ current_page.meta_description }}</textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: LIVE MOCKUP PREVIEW & ACTIONS -->
+      <div style="position: sticky; top: 90px;">
+        
+        <!-- Action Card -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title" style="font-size: 16px;">
+              <i class="ri-send-plane-fill" style="color: var(--gold-primary);"></i>
+              <span>Publish Control</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+              Changes made here update the live database record for <strong>{{ current_page.page_name }}</strong> immediately.
+            </div>
+
+            <button type="submit" class="btn btn-gold" style="width: 100%; justify-content: center; padding: 12px; margin-bottom: 10px;">
+              <i class="ri-save-line"></i> Save & Publish Live
+            </button>
+
+            <a href="{{ live_url }}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 10px;">
+              <i class="ri-external-link-line"></i> View Live Page
+            </a>
+
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 14px; text-align: center;">
+              Last updated: {{ current_page.updated_at|date:"M d, Y H:i" }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Header Mockup Preview -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title" style="font-size: 14px;">
+              <i class="ri-eye-line" style="color: var(--gold-primary);"></i>
+              <span>Live Visual Mockup</span>
+            </div>
+          </div>
+          <div class="panel-body" style="padding: 12px;">
+            <div style="background: #0D1117; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); text-align: center;">
+              <div style="height: 160px; background: #182030; position: relative; overflow: hidden;">
+                <img id="mockupHeroImg" src="{{ current_page.hero_image|default:'https://www.jaipurliving.com/media/wysiwyg/2A5A3712-Weavers_1920x600_1.jpg' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.45);"></div>
+                <div style="position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px; color: #FFF;">
+                  <span id="mockupEyebrow" style="font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-light); font-weight: 700;">{{ current_page.eyebrow|default:"HERITAGE" }}</span>
+                  <h4 id="mockupTitle" style="font-family: var(--font-heading); font-size: 16px; margin: 4px 0; color: #FFF;">{{ current_page.title|default:"Page Title" }}</h4>
+                  <p id="mockupSubtitle" style="font-size: 10px; color: rgba(255,255,255,0.8); max-height: 40px; overflow: hidden; line-height: 1.4;">{{ current_page.subtitle|truncatewords:12 }}</p>
+                </div>
+              </div>
+              <div style="padding: 10px; font-size: 11px; color: var(--text-muted); background: #121824;">
+                <i class="ri-pulse-line" style="color: #34D399;"></i> Updates dynamically as you type
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </form>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Instant Live Mockup Updates
+  const titleInput = document.getElementById('inputTitle');
+  const eyebrowInput = document.getElementById('inputEyebrow');
+  const subtitleInput = document.getElementById('inputSubtitle');
+  const heroUrlInput = document.getElementById('heroUrlInput');
+  const heroFileInput = document.getElementById('heroFileInput');
+
+  const mockupTitle = document.getElementById('mockupTitle');
+  const mockupEyebrow = document.getElementById('mockupEyebrow');
+  const mockupSubtitle = document.getElementById('mockupSubtitle');
+  const mockupHeroImg = document.getElementById('mockupHeroImg');
+
+  if (titleInput && mockupTitle) {
+    titleInput.addEventListener('input', e => { mockupTitle.textContent = e.target.value || 'Page Title'; });
+  }
+  if (eyebrowInput && mockupEyebrow) {
+    eyebrowInput.addEventListener('input', e => { mockupEyebrow.textContent = e.target.value || 'HERITAGE'; });
+  }
+  if (subtitleInput && mockupSubtitle) {
+    subtitleInput.addEventListener('input', e => { mockupSubtitle.textContent = e.target.value || ''; });
+  }
+  if (heroUrlInput && mockupHeroImg) {
+    heroUrlInput.addEventListener('input', e => { if (e.target.value) mockupHeroImg.src = e.target.value; });
+  }
+
+  // Instant local preview when image file is picked from disk
+  if (heroFileInput && mockupHeroImg) {
+    heroFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          mockupHeroImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+</script>
+{% endblock %}

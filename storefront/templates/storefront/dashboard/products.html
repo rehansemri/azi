@@ -1,0 +1,212 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Product Catalog & Pricing{% endblock %}
+{% block page_subtitle %}Full CRUD control over all products, variants, dynamic prices, bulk controls, and instant quick toggles{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'storefront:dashboard_product_create' %}" class="btn btn-gold">
+    <i class="ri-add-line"></i>
+    <span>Add New Product</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- FILTER & SEARCH BAR -->
+<div class="panel" style="margin-bottom: 24px;">
+  <div class="panel-body" style="padding: 16px 24px;">
+    <form method="GET" action="{% url 'storefront:dashboard_products' %}" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+      <div style="flex: 1; min-width: 240px; position: relative;">
+        <i class="ri-search-line" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 16px;"></i>
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Search by name, catalog code (e.g., TRZ05), or collection..." class="form-control" style="padding-left: 40px;">
+      </div>
+
+      <div style="min-width: 200px;">
+        <select name="collection" class="form-control" onchange="this.form.submit()">
+          <option value="">All Collections</option>
+          {% for col in collections_list %}
+            <option value="{{ col }}" {% if selected_collection == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-secondary">
+        <i class="ri-filter-3-line"></i> Filter
+      </button>
+
+      {% if search_query or selected_collection %}
+        <a href="{% url 'storefront:dashboard_products' %}" class="btn btn-secondary" style="color: var(--accent-danger);">
+          <i class="ri-close-line"></i> Clear
+        </a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- BULK ACTION FORM & PRODUCTS TABLE -->
+<form method="POST" action="{% url 'storefront:dashboard_products_bulk_action' %}" id="bulkActionForm">
+  {% csrf_token %}
+
+  <div class="panel">
+    <div class="panel-header" style="flex-wrap: wrap; gap: 14px;">
+      <div class="panel-title">
+        <i class="ri-archive-line" style="color: var(--gold-primary);"></i>
+        <span>All Catalog Items ({{ products|length }})</span>
+      </div>
+
+      <!-- Bulk Actions Bar -->
+      <div id="bulkActionsBar" style="display: flex; align-items: center; gap: 10px; background: rgba(201, 169, 130, 0.1); border: 1px solid rgba(201, 169, 130, 0.3); padding: 4px 12px; border-radius: 6px;">
+        <span style="font-size: 12px; font-weight: 600; color: var(--gold-light);" id="selectedCountText">0 Selected</span>
+        <select name="bulk_action" id="bulkActionSelect" class="form-control" style="padding: 4px 10px; font-size: 12px; height: 32px; width: auto;">
+          <option value="">-- Choose Bulk Action --</option>
+          <option value="mark_in_stock">Mark In Stock</option>
+          <option value="mark_out_of_stock">Mark Out of Stock</option>
+          <option value="mark_trending">Mark as Trending</option>
+          <option value="remove_trending">Remove from Trending</option>
+          <option value="delete">Delete Selected Products</option>
+        </select>
+        <button type="submit" class="btn btn-gold btn-sm" onclick="return confirmBulkAction()">
+          Apply to Selected
+        </button>
+      </div>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 38px; text-align: center;">
+              <input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--gold-primary);">
+            </th>
+            <th style="width: 50px;">Thumbnail</th>
+            <th>Product / Code</th>
+            <th>Collection</th>
+            <th>Starting Price</th>
+            <th>Variants (Sizes)</th>
+            <th>Stock Status</th>
+            <th>Trending</th>
+            <th style="text-align: right; min-width: 240px;">Actions & Duplication</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+            <tr>
+              <td style="text-align: center;">
+                <input type="checkbox" name="selected_products" value="{{ product.id }}" class="prod-checkbox" onchange="updateBulkBar()" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--gold-primary);">
+              </td>
+              <td>
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="thumb-cell">
+              </td>
+              <td>
+                <div style="font-weight: 600; color: #FFF; font-size: 14px;">{{ product.name }}</div>
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 2px;">
+                  <span style="font-size: 11px; color: var(--gold-light); font-weight: 600;">{{ product.catalog_code }}</span>
+                  {% if product.badge %}
+                    <span class="badge badge-gold" style="font-size: 9px; padding: 1px 5px;">{{ product.badge }}</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-secondary">{{ product.collection }}</span>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">{{ product.construction }}</div>
+              </td>
+              <td style="font-weight: 700; color: var(--gold-light); font-size: 14px;">
+                ${{ product.price_from }}
+              </td>
+              <td>
+                <a href="{% url 'storefront:dashboard_product_variants' product.id %}" class="btn btn-secondary btn-sm" style="font-size: 11px;">
+                  <i class="ri-price-tag-3-line"></i> {{ product.variants.count }} Sizes
+                </a>
+              </td>
+
+              <!-- Quick Stock Toggle -->
+              <td>
+                <button type="submit" formaction="{% url 'storefront:dashboard_product_toggle_stock' product.id %}" formmethod="POST" class="btn btn-sm" style="border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; {% if product.is_in_stock %}background: rgba(16, 185, 129, 0.15); color: #34D399;{% else %}background: rgba(245, 158, 11, 0.15); color: #FBBF24;{% endif %}" title="Click to toggle stock status">
+                  {% if product.is_in_stock %}
+                    <i class="ri-checkbox-circle-fill"></i> In Stock
+                  {% else %}
+                    <i class="ri-time-line"></i> Made to Order
+                  {% endif %}
+                </button>
+              </td>
+
+              <!-- Quick Trending Toggle -->
+              <td>
+                <button type="submit" formaction="{% url 'storefront:dashboard_product_toggle_trending' product.id %}" formmethod="POST" class="btn btn-sm" style="border: none; background: transparent; padding: 4px; cursor: pointer; font-size: 16px; {% if product.is_trending %}color: var(--gold-primary);{% else %}color: var(--text-dim);{% endif %}" title="Click to toggle Trending spotlight">
+                  <i class="{% if product.is_trending %}ri-star-fill{% else %}ri-star-line{% endif %}"></i>
+                </button>
+              </td>
+
+              <!-- Actions -->
+              <td style="text-align: right; white-space: nowrap;">
+                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                  <!-- Duplicate Product -->
+                  <button type="submit" formaction="{% url 'storefront:dashboard_product_duplicate' product.id %}" formmethod="POST" class="btn btn-secondary btn-sm" title="Duplicate product with all sizes & images" onclick="return confirm('Duplicate \'{{ product.name }}\' into a new draft rug?');">
+                    <i class="ri-file-copy-line"></i> Duplicate
+                  </button>
+
+                  <a href="{{ product.get_absolute_url }}" target="_blank" class="btn btn-secondary btn-sm" title="View live page">
+                    <i class="ri-external-link-line"></i>
+                  </a>
+                  <a href="{% url 'storefront:dashboard_product_edit' product.id %}" class="btn btn-secondary btn-sm" title="Edit Product">
+                    <i class="ri-edit-line"></i> Edit
+                  </a>
+                  <button type="submit" formaction="{% url 'storefront:dashboard_product_delete' product.id %}" formmethod="POST" class="btn btn-danger btn-sm" title="Delete Product" onclick="return confirm('Are you sure you want to delete \'{{ product.name }}\' and all its size variants from the database?');">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-dim); padding: 40px;">
+                No products found matching your search. Try resetting filters or <a href="{% url 'storefront:dashboard_product_create' %}" style="color: var(--gold-light);">add a new product</a>.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</form>
+
+<script>
+  function toggleSelectAll(master) {
+    const checkboxes = document.querySelectorAll('.prod-checkbox');
+    checkboxes.forEach(cb => cb.checked = master.checked);
+    updateBulkBar();
+  }
+
+  function updateBulkBar() {
+    const checked = document.querySelectorAll('.prod-checkbox:checked');
+    const total = document.querySelectorAll('.prod-checkbox');
+    const master = document.getElementById('selectAllCheckbox');
+    const countText = document.getElementById('selectedCountText');
+    
+    countText.textContent = checked.length + ' Selected';
+    if (master) {
+      master.checked = (checked.length === total.length && total.length > 0);
+    }
+  }
+
+  function confirmBulkAction() {
+    const select = document.getElementById('bulkActionSelect');
+    const action = select.value;
+    const checked = document.querySelectorAll('.prod-checkbox:checked');
+
+    if (!action) {
+      alert('Please choose a bulk action to perform.');
+      return false;
+    }
+    if (checked.length === 0) {
+      alert('Please select at least one product using the checkboxes.');
+      return false;
+    }
+    if (action === 'delete') {
+      return confirm('Are you sure you want to DELETE ' + checked.length + ' selected product(s) and their size variants? This cannot be undone.');
+    }
+    return true;
+  }
+</script>
+
+{% endblock %}

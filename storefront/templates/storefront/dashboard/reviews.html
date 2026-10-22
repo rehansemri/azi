@@ -1,0 +1,84 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Customer & Designer Reviews{% endblock %}
+{% block page_subtitle %}Moderate ratings, verified trade badges, and authentic room photo submissions{% endblock %}
+
+{% block content %}
+
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="ri-star-line" style="color: var(--gold-primary);"></i>
+      <span>Verified Reviews ({{ reviews|length }})</span>
+    </div>
+  </div>
+
+  <div class="data-table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Rug Product</th>
+          <th>Author & Credential</th>
+          <th>Rating & Review</th>
+          <th>Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reviews %}
+          <tr>
+            <td style="font-size: 11.5px; color: var(--text-dim); white-space: nowrap;">
+              {{ r.created_at|date:"M d, Y" }}
+            </td>
+            <td>
+              <div style="font-weight: 600; color: #FFF;">{{ r.product.name }}</div>
+              <div style="font-size: 11px; color: var(--gold-light);">{{ r.product.catalog_code }}</div>
+            </td>
+            <td>
+              <div style="font-weight: 600; color: #FFF;">{{ r.author_name }}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">{{ r.author_title }}</div>
+              {% if r.is_verified_trade %}
+                <span class="badge badge-gold" style="font-size: 9px; margin-top: 3px;">Verified Trade Partner</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="color: #F59E0B; margin-bottom: 2px;">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}
+                {% endfor %}
+                <strong style="color: #FFF; font-size: 12.5px; margin-left: 6px;">{{ r.title }}</strong>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); max-width: 480px; line-height: 1.4;">
+                {{ r.review_body }}
+              </p>
+            </td>
+            <td>
+              {% if r.is_approved %}
+                <span class="badge badge-success"><i class="ri-checkbox-circle-line"></i> Live On Store</span>
+              {% else %}
+                <span class="badge badge-secondary"><i class="ri-eye-off-line"></i> Hidden</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right;">
+              <form method="POST" action="{% url 'storefront:dashboard_review_toggle' r.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn {% if r.is_approved %}btn-secondary{% else %}btn-gold{% endif %} btn-sm">
+                  {% if r.is_approved %}Hide Review{% else %}Approve & Publish{% endif %}
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 40px;">
+              No customer reviews recorded yet.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

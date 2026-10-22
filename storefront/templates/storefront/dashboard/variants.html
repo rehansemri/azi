@@ -1,0 +1,266 @@
+{% extends "storefront/dashboard/layout.html" %}
+
+{% block page_title %}Manage Sizes & Pricing: {{ product.name }}{% endblock %}
+{% block page_subtitle %}All prices on the PDP are fetched directly from these database variant records{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'storefront:dashboard_products' %}" class="btn btn-secondary">
+    <i class="ri-arrow-left-line"></i> Back to Products
+  </a>
+  <a href="{{ product.get_absolute_url }}" target="_blank" class="btn btn-gold">
+    <i class="ri-external-link-line"></i> Test Live on Product Page
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- PRODUCT INFO SUMMARY BAR -->
+<div class="panel" style="background: rgba(255, 255, 255, 0.02); margin-bottom: 24px;">
+  <div class="panel-body" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+    <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color);">
+    <div style="flex: 1;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 600; letter-spacing: 1px;">
+        Catalog Code: {{ product.catalog_code }} | Collection: {{ product.collection }}
+      </div>
+      <h3 style="font-family: var(--font-heading); font-size: 24px; color: #FFF; margin: 2px 0;">{{ product.name }}</h3>
+      <div style="font-size: 13px; color: var(--text-muted);">
+        Base Price: <strong style="color: var(--gold-light);">${{ product.price_from }}</strong> | 
+        Total Sizes Configured: <strong style="color: #FFF;">{{ variants|length }}</strong>
+      </div>
+    </div>
+    <div>
+      <a href="{% url 'storefront:dashboard_product_edit' product.id %}" class="btn btn-secondary btn-sm">
+        <i class="ri-edit-line"></i> Edit Product Specs
+      </a>
+    </div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px; align-items: start;">
+
+  <!-- SIZES & VARIANTS TABLE -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="ri-shape-line" style="color: var(--gold-primary);"></i>
+        <span>Active Size Variants in Database</span>
+      </div>
+    </div>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Size</th>
+            <th>SKU</th>
+            <th>Color / Palette</th>
+            <th>Live Price</th>
+            <th>Stock</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for variant in variants %}
+            <tr>
+              <td style="font-weight: 700; color: #FFF; font-size: 14px;">
+                {{ variant.size }}
+              </td>
+              <td>
+                <code style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-size: 11.5px; color: var(--gold-light);">{{ variant.sku }}</code>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background-color: {{ variant.color_hex|default:'#9D9B8B' }}; border: 1px solid rgba(255,255,255,0.2);"></span>
+                  <span style="font-size: 12.5px; color: var(--text-muted);">{{ variant.color_name }}</span>
+                </div>
+              </td>
+              <td style="font-weight: 700; color: var(--gold-light); font-size: 15px;">
+                ${{ variant.price }}
+              </td>
+              <td>
+                {% if variant.in_stock %}
+                  <span class="badge badge-success">In Stock</span>
+                {% else %}
+                  <span class="badge badge-warning">Made to Order</span>
+                {% endif %}
+              </td>
+              <td style="text-align: right;">
+                <form method="POST" action="{% url 'storefront:dashboard_variant_delete' variant.id %}" onsubmit="return confirm('Remove size variant \'{{ variant.size }}\'?');" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Size Variant">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                No sizes found for this product. Use the form on the right to add standard sizes.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ADD SIZES: SINGLE OR BATCH -->
+  <div>
+    <!-- BATCH ADD MULTIPLE SIZES -->
+    <div class="panel" style="margin-bottom: 24px; border-color: rgba(201, 169, 130, 0.3);">
+      <div class="panel-header" style="background: rgba(201, 169, 130, 0.08);">
+        <div class="panel-title" style="font-size: 17px;">
+          <i class="ri-stack-line" style="color: var(--gold-primary);"></i>
+          <span>Batch Add Multiple Sizes</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <form method="POST" action="{% url 'storefront:dashboard_variants_batch_create' %}" id="batchSizesForm">
+          {% csrf_token %}
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+
+          <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px;">
+            Quickly append multiple sizes and prices to <strong>{{ product.name }}</strong> at once:
+          </p>
+
+          <div id="batchRowsContainer">
+            <div class="batch-row" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: center;">
+              <input type="text" name="size[]" class="form-control" placeholder="Size (e.g. 8'X10')" required>
+              <input type="number" step="0.01" name="price[]" class="form-control" placeholder="Price ($ USD)" required style="color: var(--gold-light); font-weight: 700;">
+              <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.batch-row').remove()" title="Remove row">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+            <div class="batch-row" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: center;">
+              <input type="text" name="size[]" class="form-control" placeholder="Size (e.g. 9'X12')">
+              <input type="number" step="0.01" name="price[]" class="form-control" placeholder="Price ($ USD)" style="color: var(--gold-light); font-weight: 700;">
+              <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.batch-row').remove()" title="Remove row">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin: 14px 0;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addBatchRow()">
+              <i class="ri-add-line"></i> Add Another Row
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addBatchPreset('Runner (2\'6&quot;X8\')', '{{ product.price_from }}')">
+              + Runner
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addBatchPreset('Oversized (12\'X15\')', '{{ product.price_from }}')">
+              + 12'X15'
+            </button>
+          </div>
+
+          <button type="submit" class="btn btn-gold" style="width: 100%; justify-content: center; padding: 11px;">
+            <i class="ri-check-double-line"></i>
+            <span>Save All Sizes to Database</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ADD SINGLE DETAILED VARIANT FORM -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title" style="font-size: 17px;">
+          <i class="ri-add-circle-line" style="color: var(--gold-primary);"></i>
+          <span>Add Single Detailed Variant</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <form method="POST" action="{% url 'storefront:dashboard_variant_create' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+
+          <div class="form-group">
+            <label class="form-label">Size Dimension *</label>
+            <input type="text" name="size" class="form-control" placeholder="e.g. 8'X10', 9'X12', 2'6\"X8' Runner" required list="commonSizes">
+            <datalist id="commonSizes">
+              <option value="18&quot; Swatch">
+              <option value="2'X3'">
+              <option value="2'6&quot;X8' Runner">
+              <option value="5'X7'6&quot;">
+              <option value="6'X9'">
+              <option value="8'X10'">
+              <option value="9'X12'">
+              <option value="10'X14'">
+              <option value="12'X15'">
+              <option value="Custom Size">
+            </datalist>
+            <div class="form-hint">Choose from list or type custom dimensions</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Dynamic Price ($ USD) *</label>
+            <input type="number" step="0.01" name="price" class="form-control" placeholder="e.g. 1850.00" required>
+            <div class="form-hint">PDP size pill will immediately show this price</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">SKU (Optional)</label>
+            <input type="text" name="sku" class="form-control" placeholder="Leave blank to auto-generate">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Color Description</label>
+            <input type="text" name="color_name" class="form-control" value="Signature Palette">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Color Hex Code</label>
+            <input type="text" name="color_hex" class="form-control" value="#A0987C">
+          </div>
+
+          <!-- Swatch / Variant Image Upload -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <label class="form-label" style="font-size: 12.5px; color: #FFF; margin-bottom: 6px;">
+              <i class="ri-image-add-line" style="color: var(--gold-primary);"></i>
+              Variant / Swatch Photo Upload (Optional)
+            </label>
+            <input type="file" name="variant_image_file" accept="image/*" class="form-control" style="font-size: 12px; padding: 6px 8px; margin-bottom: 6px;">
+            <input type="text" name="variant_image" class="form-control" value="{{ product.image_url }}" placeholder="Or paste image URL" style="font-size: 12px;">
+            <div class="form-hint" style="margin-top: 4px;">Defaults to main product shot if not specified</div>
+          </div>
+
+          <div class="form-check" style="margin-bottom: 20px;">
+            <input type="checkbox" name="in_stock" id="var_in_stock" checked>
+            <label for="var_in_stock" style="cursor: pointer; font-weight: 500;">
+              Size Available in Stock
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 11px;">
+            <i class="ri-add-line"></i>
+            <span>Add Single Size</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  function addBatchRow(sizeVal = '', priceVal = '') {
+    const container = document.getElementById('batchRowsContainer');
+    const div = document.createElement('div');
+    div.className = 'batch-row';
+    div.style = 'display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: center;';
+    div.innerHTML = `
+      <input type="text" name="size[]" class="form-control" placeholder="Size (e.g. 10'X14')" value="${sizeVal}" required>
+      <input type="number" step="0.01" name="price[]" class="form-control" placeholder="Price ($ USD)" value="${priceVal}" required style="color: var(--gold-light); font-weight: 700;">
+      <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.batch-row').remove()" title="Remove row">
+        <i class="ri-close-line"></i>
+      </button>
+    `;
+    container.appendChild(div);
+  }
+
+  function addBatchPreset(sizeVal, priceVal) {
+    addBatchRow(sizeVal, priceVal);
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+
+{% block title %}{{ site_settings.site_name|default:"AZI HOME" }} | Shop Luxurious Handmade Rugs + Decor{% endblock %}
+
+{% block content %}
+
+<!-- 1. Hero Cinematic Showcase (CallaLuxe) -->
+<section class="hero-showcase">
+  <div class="hero-video-container">
+    {% if page_content.hero_video_url %}
+      <iframe src="{{ page_content.hero_video_url }}" 
+              title="CallaLuxe Westview" 
+              frameborder="0" 
+              allow="autoplay; fullscreen; picture-in-picture"></iframe>
+    {% endif %}
+    <img src="{{ page_content.hero_image|default:'https://www.jaipurliving.com/media/wysiwyg/LS_Grid_Graphic_Website_1_.png' }}" 
+         alt="{{ page_content.title|default:'CallaLuxe' }}" 
+         class="hero-video-fallback" 
+         {% if page_content.hero_video_url %}style="display:none;"{% endif %}>
+  </div>
+  <div class="hero-scrim"></div>
+  
+  <div class="hero-content">
+    <span class="hero-eyebrow">{{ page_content.eyebrow|default:"LUXURY RUGS, MADE FOR REAL LIFE" }}</span>
+    <h1 class="hero-title">{{ page_content.title|default:"CallaLuxe" }}</h1>
+    <p class="hero-desc">
+      {{ page_content.subtitle|default:"Softness of wool. Resilience of performance. Crafted with solution-dyed acrylic fibers exclusively engineered for AZI HOME." }}
+    </p>
+    <div class="hero-actions">
+      <a href="{{ page_content.cta_primary_url|default:'/callaluxe/' }}" class="btn-luxury-primary">
+        {{ page_content.cta_primary_text|default:"Shop CallaLuxe" }}
+      </a>
+      <a href="{{ page_content.cta_secondary_url|default:'/rugs/' }}" class="btn-luxury-outline">
+        {{ page_content.cta_secondary_text|default:"Explore All Rugs" }}
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Heritage Mission Statement (Dynamic via CMS) -->
+<section class="heritage-statement-block">
+  <div class="statement-inner">
+    <div class="statement-eyebrow">{{ page_content.section_heading|default:"ESTABLISHED 1978 • MASTER WEAVERS" }}</div>
+    <blockquote class="statement-text">
+      “{{ page_content.highlight_text|default:"Since 1978, AZI HOME has redefined rug making—where the value lies not just in the rugs themselves, but in the hands that create them. Every piece is a reflection of heritage, care, and craftsmanship passed down through generations of artisans straight to you." }}”
+    </blockquote>
+  </div>
+</section>
+
+<!-- 3. Highlights 3-Column Grid -->
+<section class="highlights-grid-section">
+  <div class="highlights-grid">
+    
+    <a href="{% url 'storefront:rugs' %}?in_stock=1" class="highlight-card">
+      <div class="highlight-card-img-wrap">
+        <img src="https://www.jaipurliving.com/media/wysiwyg/CMB07_RUG164911_RCT_LS020_1_.jpg" alt="In Stock Rugs">
+      </div>
+      <div class="highlight-card-title">In Stock Rugs & Quick Ship</div>
+    </a>
+
+    <a href="{% url 'storefront:rugs_new_html' %}" class="highlight-card">
+      <div class="highlight-card-img-wrap">
+        <img src="https://www.jaipurliving.com/media/wysiwyg/CSN10_RUG168006_RCT_WAV.jpg" alt="New Arrivals">
+      </div>
+      <div class="highlight-card-title">New Arrivals</div>
+    </a>
+
+    <a href="{% url 'storefront:rugs' %}?collection=Vern Yip" class="highlight-card">
+      <div class="highlight-card-img-wrap">
+        <img src="https://www.jaipurliving.com/media/wysiwyg/Vern_Yip_3UP.jpg" alt="Designer Collections">
+      </div>
+      <div class="highlight-card-title">Designer Collections</div>
+    </a>
+
+  </div>
+</section>
+
+<!-- 4. CallaLuxe Feature Banner -->
+<section class="callaluxe-banner-section">
+  <div class="callaluxe-banner-inner">
+    <img src="{{ page_content.secondary_image|default:'https://www.jaipurliving.com/media/wysiwyg/LS_Grid_Graphic_Website_1_.png' }}" alt="{{ page_content.section_subheading|default:'Made for Life\'s Toughest Moments' }}">
+    <div class="callaluxe-overlay-content">
+      <span class="section-heading-eyebrow">INNOVATION & PERFORMANCE</span>
+      <h2>{{ page_content.section_subheading|default:"Made for Life's Toughest Moments" }}</h2>
+      <p>
+        {{ page_content.body|default:"Warp and weft interlock without knots or pile, creating a low-profile flatweave built for the rooms that get used hardest. Color is infused at the fiber's core so full saturation holds year after year." }}
+      </p>
+      <a href="{% url 'storefront:callaluxe' %}" class="btn-luxury-dark">Discover CallaLuxe</a>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Product Carousel: Introducing | CallaLuxe -->
+<section class="section-wrapper">
+  <div class="section-header-centered">
+    <div class="section-heading-eyebrow">EXCLUSIVE TO AZI HOME</div>
+    <h2 class="section-heading-main">Introducing | CallaLuxe</h2>
+  </div>
+
+  <div class="carousel-container">
+    <button class="carousel-btn prev" aria-label="Previous Products">&#10094;</button>
+    <div class="product-carousel-track">
+      {% for product in callaluxe_products %}
+        <div class="product-card" data-id="{{ product.id }}" onclick="if(!event.target.closest('.wishlist-btn')) window.location.href='{% url 'storefront:product_detail' product.slug %}'">
+          <div class="product-card-img-wrap">
+            <a href="{% url 'storefront:product_detail' product.slug %}">
+              <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+            </a>
+            <span class="product-badge">{{ product.badge|default:"CallaLuxe" }}</span>
+            <button class="wishlist-btn" title="Add to Project List" onclick="event.stopPropagation(); toggleWishlist(this, {{ product.id }})">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card-info">
+            <span class="product-card-collection">{{ product.collection }}</span>
+            <a href="{% url 'storefront:product_detail' product.slug %}" class="product-card-name">{{ product.name }}</a>
+            <span class="product-card-meta">{{ product.construction }} • {{ product.material }}</span>
+            <div class="product-card-price">From ${{ product.price_from|floatformat:2 }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <button class="carousel-btn next" aria-label="Next Products">&#10095;</button>
+  </div>
+</section>
+
+<!-- 6. Shoppable Lifestyle Room: Majnun Collection -->
+<section class="shoppable-lifestyle-section">
+  <div class="shoppable-banner-wrap">
+    <img src="https://mcstaging.azi-home.com/media/tmp/product-image-media/slider/Majnun_Banner_2.jpg" alt="Majnun Collection Lifestyle">
+    
+    <!-- Interactive Hotspot Pin -->
+    <div class="hotspot-pin">
+      <button class="hotspot-trigger-btn" id="shoppableHotspotBtn" aria-label="View room products">
+        <span class="hotspot-pulse-dot"></span>
+        <span>View Products (5)</span>
+      </button>
+    </div>
+
+    <!-- Slide-Up Drawer of Room Items -->
+    <div class="shoppable-drawer" id="shoppableDrawer">
+      <div class="shoppable-drawer-header">
+        <h4 class="shoppable-drawer-title">Shop The Look — Majnun Heirloom Collection</h4>
+        <button class="shoppable-drawer-close" id="shoppableDrawerCloseBtn">Close ✕</button>
+      </div>
+      <div class="shoppable-items-row">
+        {% for item in majnun_products %}
+          <div class="shoppable-item-card">
+            <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy">
+            <a href="{% url 'storefront:product_detail' item.slug %}" class="shoppable-item-name">{{ item.name }}</a>
+            <span class="shoppable-item-price">${{ item.price_from|floatformat:2 }}</span>
+            <button class="btn-quick-add" style="padding:6px 0;" onclick="addToCartDirect({{ item.id }}, '8\'X10\'', 'Default', 1)">Quick Add</button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Trending Now Curated Grid -->
+<section class="section-wrapper trending-grid-section">
+  <div class="section-header-centered">
+    <div class="section-heading-eyebrow">CURATED DESIGNER PICKS</div>
+    <h2 class="section-heading-main">Trending Now</h2>
+  </div>
+
+  <div class="trending-tabs">
+    <button class="tab-btn active" data-filter="all">All Styles</button>
+    <button class="tab-btn" data-filter="Hand Knotted">Hand Knotted</button>
+    <button class="tab-btn" data-filter="Handwoven">Handwoven</button>
+    <button class="tab-btn" data-filter="Performance">Performance</button>
+  </div>
+
+  <div class="product-grid-4col">
+    {% for product in trending_products %}
+      <div class="product-card" data-category="{{ product.construction }}" data-material="{{ product.material }}" onclick="if(!event.target.closest('.wishlist-btn')) window.location.href='{% url 'storefront:product_detail' product.slug %}'">
+        <div class="product-card-img-wrap">
+          <a href="{% url 'storefront:product_detail' product.slug %}">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+          </a>
+          <span class="product-badge">{{ product.badge|default:"Trending" }}</span>
+          <button class="wishlist-btn" title="Add to Project List" onclick="event.stopPropagation(); toggleWishlist(this, {{ product.id }})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="product-card-info">
+          <span class="product-card-collection">{{ product.collection }}</span>
+          <a href="{% url 'storefront:product_detail' product.slug %}" class="product-card-name">{{ product.name }}</a>
+          <span class="product-card-meta">{{ product.construction }} • {{ product.material }}</span>
+          <div class="product-card-price">From ${{ product.price_from|floatformat:2 }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- 8. Artisan Heritage Full-Bleed Section -->
+<section class="heritage-fullbleed-section">
+  <img src="https://www.jaipurliving.com/media/wysiwyg/2A5A3712-Weavers_1920x600_1.jpg" alt="Artisan Weavers of Rajasthan" class="heritage-fullbleed-bg">
+  <div class="heritage-fullbleed-content">
+    <div class="heritage-fullbleed-eyebrow">OUR ARTISAN ROOTS</div>
+    <h2 class="heritage-fullbleed-title">A Legacy Woven Over Time</h2>
+    <p class="heritage-fullbleed-desc">
+      Our rugs carry the hand of their maker and the spirit of their place with traditions preserved and stories renewed. We blend timeless methods with modern perspectives, creating pieces made to be loved, used, and passed on.
+    </p>
+    <a href="{% url 'storefront:story' %}" class="btn-luxury-outline">Read Our Story</a>
+  </div>
+</section>
+
+<!-- 9. Split Section: Contract & Hospitality Rugs -->
+<section class="split-feature-section">
+  <div class="split-feature-row">
+    <div class="split-feature-content">
+      <span class="split-feature-eyebrow">AZI HOME CONTRACT</span>
+      <h2 class="split-feature-title">Contract & Hospitality Rugs</h2>
+      <p class="split-feature-desc">
+        Designed to meet the demanding needs of luxury hospitality, high-end boutique hotels, executive suites, and commercial spaces. Offering custom sizing, bespoke color matching, and heavy-traffic performance specifications.
+      </p>
+      <a href="{% url 'storefront:contract' %}" class="btn-luxury-dark">Learn More About Contract</a>
+    </div>
+    <div class="split-feature-img-wrap">
+      <img src="https://www.jaipurliving.com/media/wysiwyg/d08557a2-caf5-420e-95d8-8a828744e85c_2.png" alt="Contract Rugs">
+    </div>
+  </div>
+
+  <!-- 10. Split Section: Trade Program Advantage -->
+  <div class="split-feature-row reverse">
+    <div class="split-feature-content">
+      <span class="split-feature-eyebrow">DESIGN PROFESSIONAL ADVANTAGE</span>
+      <h2 class="split-feature-title">Open A Trade Account</h2>
+      <p class="split-feature-desc">
+        When you join our trade program, you become part of our family. Access unmatched service tailored specifically to your studio’s design workflows.
+      </p>
+      <ul class="trade-benefits-list">
+        <li>Exclusive trade-only pricing & volume discounts</li>
+        <li>Dedicated 1:1 account manager & project concierge</li>
+        <li>Complimentary swatches & sample ring sets</li>
+        <li>No order minimums & expedited shipping options</li>
+        <li>Custom sizing & bespoke color pom box access</li>
+      </ul>
+      <a href="#" class="btn-luxury-dark trade-application-trigger">Apply for Trade Account</a>
+    </div>
+    <div class="split-feature-img-wrap">
+      <img src="https://www.jaipurliving.com/media/wysiwyg/SAG_swatches_CYC_RCT_2__26_1_1__1.jpg" alt="Trade Swatches Presentation">
+    </div>
+  </div>
+</section>
+
+{% endblock %}
